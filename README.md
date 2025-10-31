@@ -1,6 +1,10 @@
 # Git History Viewer
 
-一个极简主义的VSCode Git历史查看插件，专注于文件和代码行的历史追溯。
+<div align="center">
+  <img src="https://raw.githubusercontent.com/crazykun/git-history-viewer/refs/heads/main/src/logo.png" alt="Git History Viewer Logo" width="128" height="128">
+  <br>
+  <em>一个极简主义的VSCode Git历史查看插件，专注于文件和代码行的历史追溯。</em>
+</div>
 
 ## 设计理念
 
