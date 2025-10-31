@@ -94,6 +94,15 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    const showLineCommitDiffCommand = vscode.commands.registerCommand(
+        'gitHistoryViewer.showLineCommitDiff',
+        async (filePath?: string, commitHash?: string, lineNumber?: number) => {
+            if (filePath && commitHash && lineNumber !== undefined) {
+                await gitHistoryProvider.showLineCommitDiff(filePath, commitHash, lineNumber);
+            }
+        }
+    );
+
     const copyCommitHashCommand = vscode.commands.registerCommand(
         'gitHistoryViewer.copyCommitHash',
         async (item: any) => {
@@ -126,6 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
         showFileHistoryCommand,
         refreshCommand,
         showCommitDiffCommand,
+        showLineCommitDiffCommand,
         copyCommitHashCommand,
         focusCommand
     );

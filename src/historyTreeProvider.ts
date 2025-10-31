@@ -68,17 +68,30 @@ export class HistoryTreeItem extends vscode.TreeItem {
         
         this.tooltip = `提交: ${commit.hash}\n作者: ${commit.author}\n日期: ${commit.date}\n消息: ${commit.message}${commit.changes ? '\n变更: ' + commit.changes : ''}`;
         this.description = `${commit.hash} • ${commit.author}`;
-        this.contextValue = 'commit';
         
-        // 设置图标
-        this.iconPath = new vscode.ThemeIcon('git-commit');
-        
-        // 设置命令，点击时显示差异
-        this.command = {
-            command: 'gitHistoryViewer.showCommitDiff',
-            title: '查看提交差异',
-            arguments: [this.filePath, this.commit.fullHash]
-        };
+        // 根据是否有行号设置不同的上下文值和图标
+        if (this.lineNumber !== undefined) {
+            this.contextValue = 'lineCommit';
+            this.iconPath = new vscode.ThemeIcon('symbol-line');
+            this.tooltip += `\n行号: ${this.lineNumber}`;
+            
+            // 行级别的差异命令
+            this.command = {
+                command: 'gitHistoryViewer.showLineCommitDiff',
+                title: '查看行级别差异',
+                arguments: [this.filePath, this.commit.fullHash, this.lineNumber]
+            };
+        } else {
+            this.contextValue = 'fileCommit';
+            this.iconPath = new vscode.ThemeIcon('git-commit');
+            
+            // 文件级别的差异命令
+            this.command = {
+                command: 'gitHistoryViewer.showCommitDiff',
+                title: '查看文件差异',
+                arguments: [this.filePath, this.commit.fullHash]
+            };
+        }
 
         // 添加标签显示日期
         this.resourceUri = vscode.Uri.parse(`git-history:${commit.hash}`);

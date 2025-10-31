@@ -32,28 +32,61 @@ export class GitHistoryProvider {
             const relativePath = vscode.workspace.asRelativePath(filePath);
             const cwd = workspaceFolder.uri.fsPath;
 
-            // 使用 git blame 获取行的修改历史
-            const blameCommand = `git blame -L ${lineNumber},${lineNumber} --porcelain "${relativePath}"`;
-            const { stdout: blameOutput } = await execAsync(blameCommand, { cwd });
-
-            const commitHash = blameOutput.split('\n')[0].split(' ')[0];
-
-            // 获取该提交的详细信息
-            const logCommand = `git log --pretty=format:"%H|%an|%ad|%s" --date=short -n 10 "${relativePath}"`;
+            // 使用 git log -L 获取指定行的真实历史
+            // -L 选项可以跟踪行的变化历史，即使行号发生变化
+            const logCommand = `git log -L ${lineNumber},${lineNumber}:"${relativePath}" --pretty=format:"%H|%an|%ad|%s" --date=short`;
             const { stdout: logOutput } = await execAsync(logCommand, { cwd });
 
             const commits: GitCommit[] = [];
             const lines = logOutput.split('\n').filter((line: string) => line.trim());
 
             for (const line of lines) {
-                const [hash, author, date, message] = line.split('|');
-                commits.push({
-                    hash: hash.substring(0, 8),
-                    fullHash: hash,  // 保存完整hash
-                    author,
-                    date,
-                    message
-                });
+                // 跳过diff输出行，只处理提交信息行
+                if (line.includes('|') && !line.startsWith('@@') && !line.startsWith('+++') && !line.startsWith('---')) {
+                    const parts = line.split('|');
+                    if (parts.length >= 4) {
+                        const [hash, author, date, ...messageParts] = parts;
+                        const message = messageParts.join('|'); // 重新组合消息，防止消息中包含|字符
+                        
+                        // 避免重复添加相同的提交
+                        if (!commits.find(c => c.fullHash === hash)) {
+                            commits.push({
+                                hash: hash.substring(0, 8),
+                                fullHash: hash,
+                                author,
+                                date,
+                                message
+                            });
+                        }
+                    }
+                }
+            }
+
+            // 如果 git log -L 没有返回结果，尝试使用 git blame 作为备选方案
+            if (commits.length === 0) {
+                const blameCommand = `git blame -L ${lineNumber},${lineNumber} --porcelain "${relativePath}"`;
+                const { stdout: blameOutput } = await execAsync(blameCommand, { cwd });
+                
+                if (blameOutput.trim()) {
+                    const commitHash = blameOutput.split('\n')[0].split(' ')[0];
+                    
+                    // 获取该提交的详细信息
+                    const commitInfoCommand = `git show --pretty=format:"%H|%an|%ad|%s" --no-patch ${commitHash}`;
+                    const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
+                    
+                    if (commitInfo.trim()) {
+                        const [hash, author, date, ...messageParts] = commitInfo.split('|');
+                        const message = messageParts.join('|');
+                        
+                        commits.push({
+                            hash: hash.substring(0, 8),
+                            fullHash: hash,
+                            author,
+                            date,
+                            message
+                        });
+                    }
+                }
             }
 
             return commits;
@@ -114,6 +147,66 @@ export class GitHistoryProvider {
         } catch (error) {
             vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
             return [];
+        }
+    }
+
+    /**
+     * 显示行级别的提交差异
+     */
+    async showLineCommitDiff(filePath: string, commitHash: string, lineNumber: number): Promise<void> {
+        try {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage('文件不在工作区中');
+                return;
+            }
+
+            const relativePath = vscode.workspace.asRelativePath(filePath);
+            const cwd = workspaceFolder.uri.fsPath;
+
+            // 获取提交信息用于标题
+            const commitInfoCommand = `git show --pretty=format:"%h %s" --no-patch ${commitHash}`;
+            const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
+
+            // 使用 git log -L 获取该行在这个提交中的具体变化
+            const lineLogCommand = `git log -L ${lineNumber},${lineNumber}:"${relativePath}" --pretty=format:"" -p ${commitHash}^..${commitHash}`;
+            
+            try {
+                const { stdout: lineDiff } = await execAsync(lineLogCommand, { cwd });
+                
+                if (lineDiff.trim()) {
+                    // 创建一个临时文件显示行级别的差异
+                    const tempDir = os.tmpdir();
+                    const diffFile = path.join(tempDir, `line_${lineNumber}_diff_${commitHash.substring(0, 8)}.diff`);
+                    
+                    const diffContent = `行 ${lineNumber} 在提交 ${commitInfo.trim()} 中的变化:\n\n${lineDiff}`;
+                    await fs.promises.writeFile(diffFile, diffContent, 'utf8');
+                    
+                    this.tempFiles.push(diffFile);
+                    
+                    const diffUri = vscode.Uri.file(diffFile);
+                    await vscode.window.showTextDocument(diffUri, {
+                        preview: false,
+                        viewColumn: vscode.ViewColumn.Active
+                    });
+                    
+                    // 清理临时文件
+                    setTimeout(() => {
+                        this.cleanupTempFile(diffFile);
+                    }, 5 * 60 * 1000); // 5分钟后清理
+                    
+                    return;
+                }
+            } catch (error) {
+                console.log('行级别差异获取失败，回退到文件级别差异:', error);
+            }
+            
+            // 如果行级别差异获取失败，回退到显示整个文件的差异
+            await this.showCommitDiff(filePath, commitHash);
+            
+        } catch (error) {
+            console.error('显示行级别差异错误:', error);
+            vscode.window.showErrorMessage(`显示行级别差异失败: ${error}`);
         }
     }
 

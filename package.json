@@ -81,8 +81,13 @@
       },
       {
         "command": "gitHistoryViewer.showCommitDiff",
-        "title": "查看提交差异",
+        "title": "查看文件差异",
         "icon": "$(diff)"
+      },
+      {
+        "command": "gitHistoryViewer.showLineCommitDiff",
+        "title": "查看行级别差异",
+        "icon": "$(symbol-line)"
       },
       {
         "command": "gitHistoryViewer.copyCommitHash",
@@ -117,12 +122,17 @@
       "view/item/context": [
         {
           "command": "gitHistoryViewer.showCommitDiff",
-          "when": "(view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView) && viewItem == commit",
+          "when": "(view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView) && viewItem == fileCommit",
+          "group": "inline"
+        },
+        {
+          "command": "gitHistoryViewer.showLineCommitDiff",
+          "when": "view == gitHistoryViewer.lineHistoryView && viewItem == lineCommit",
           "group": "inline"
         },
         {
           "command": "gitHistoryViewer.copyCommitHash",
-          "when": "(view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView) && viewItem == commit",
+          "when": "(view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit)",
           "group": "inline"
         }
       ]
