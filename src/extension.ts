@@ -121,6 +121,22 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    const loadMoreLineHistoryCommand = vscode.commands.registerCommand(
+        'gitLiner.loadMoreLineHistory',
+        async (filePath: string, lineNumber: number, page: number) => {
+            await lineHistoryTreeProvider.loadMoreLineHistory(filePath, lineNumber, page);
+            updateLineViewTitle();
+        }
+    );
+
+    const loadMoreFileHistoryCommand = vscode.commands.registerCommand(
+        'gitLiner.loadMoreFileHistory',
+        async (filePath: string, _lineNumber: undefined, page: number) => {
+            await fileHistoryTreeProvider.loadMoreFileHistory(filePath, page);
+            updateFileViewTitle();
+        }
+    );
+
     // 监听编辑器变化以更新状态栏
     const onDidChangeActiveEditor = vscode.window.onDidChangeActiveTextEditor(() => {
         statusBar.updateStatusBar();
@@ -137,7 +153,9 @@ export function activate(context: vscode.ExtensionContext) {
         showCommitDiffCommand,
         showLineCommitDiffCommand,
         copyCommitHashCommand,
-        focusCommand
+        focusCommand,
+        loadMoreLineHistoryCommand,
+        loadMoreFileHistoryCommand
     );
 }
 

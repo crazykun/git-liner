@@ -2,7 +2,7 @@
   "name": "git-liner",
   "displayName": "Git Liner",
   "description": "极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "crazykun",
   "author": {
     "name": "crazykun",
@@ -111,6 +111,16 @@
       {
         "command": "gitLiner.focus",
         "title": "聚焦到Git Liner视图"
+      },
+      {
+        "command": "gitLiner.loadMoreLineHistory",
+        "title": "加载更多行历史",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitLiner.loadMoreFileHistory",
+        "title": "加载更多文件历史",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {

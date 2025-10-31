@@ -16,11 +16,107 @@ export interface GitCommit {
     changes?: string;
 }
 
+export interface PaginatedResult<T> {
+    items: T[];
+    hasMore: boolean;
+    totalCount?: number;
+}
+
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
 
     /**
-     * 获取指定行的修改历史
+     * 获取指定行的修改历史（分页版本）
+     */
+    async getLineHistoryPaginated(filePath: string, lineNumber: number, page: number = 0, pageSize: number = 20): Promise<PaginatedResult<GitCommit>> {
+        try {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
+            if (!workspaceFolder) {
+                throw new Error('文件不在工作区中');
+            }
+
+            const relativePath = vscode.workspace.asRelativePath(filePath);
+            const cwd = workspaceFolder.uri.fsPath;
+
+            // 计算跳过的提交数
+            const skip = page * pageSize;
+
+            // 使用 git log -L 获取指定行的真实历史（分页）
+            const logCommand = `git log -L ${lineNumber},${lineNumber}:"${relativePath}" --pretty=format:"%H|%an|%ad|%s" --date=short --skip=${skip} --max-count=${pageSize}`;
+            const { stdout: logOutput } = await execAsync(logCommand, { cwd });
+
+            const commits: GitCommit[] = [];
+            const lines = logOutput.split('\n').filter((line: string) => line.trim());
+
+            for (const line of lines) {
+                // 跳过diff输出行，只处理提交信息行
+                if (line.includes('|') && !line.startsWith('@@') && !line.startsWith('+++') && !line.startsWith('---')) {
+                    const parts = line.split('|');
+                    if (parts.length >= 4) {
+                        const [hash, author, date, ...messageParts] = parts;
+                        const message = messageParts.join('|');
+                        
+                        // 避免重复添加相同的提交
+                        if (!commits.find(c => c.fullHash === hash)) {
+                            commits.push({
+                                hash: hash.substring(0, 8),
+                                fullHash: hash,
+                                author,
+                                date,
+                                message
+                            });
+                        }
+                    }
+                }
+            }
+
+            // 检查是否还有更多提交（简单方法：如果返回的提交数等于pageSize，可能还有更多）
+            const hasMore = commits.length === pageSize;
+
+            // 如果 git log -L 没有返回结果且是第一页，尝试使用 git blame 作为备选方案
+            if (commits.length === 0 && page === 0) {
+                const blameCommand = `git blame -L ${lineNumber},${lineNumber} --porcelain "${relativePath}"`;
+                try {
+                    const { stdout: blameOutput } = await execAsync(blameCommand, { cwd });
+                    
+                    if (blameOutput.trim()) {
+                        const commitHash = blameOutput.split('\n')[0].split(' ')[0];
+                        
+                        // 获取该提交的详细信息
+                        const commitInfoCommand = `git show --pretty=format:"%H|%an|%ad|%s" --no-patch ${commitHash}`;
+                        const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
+                        
+                        if (commitInfo.trim()) {
+                            const [hash, author, date, ...messageParts] = commitInfo.split('|');
+                            const message = messageParts.join('|');
+                            
+                            commits.push({
+                                hash: hash.substring(0, 8),
+                                fullHash: hash,
+                                author,
+                                date,
+                                message
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.log('Blame fallback failed:', error);
+                }
+            }
+
+            return {
+                items: commits,
+                hasMore,
+                totalCount: undefined // 行历史的总数难以准确计算
+            };
+        } catch (error) {
+            vscode.window.showErrorMessage(`获取行历史失败: ${error}`);
+            return { items: [], hasMore: false, totalCount: 0 };
+        }
+    }
+
+    /**
+     * 获取指定行的修改历史（保持向后兼容）
      */
     async getLineHistory(filePath: string, lineNumber: number): Promise<GitCommit[]> {
         try {
@@ -97,7 +193,75 @@ export class GitHistoryProvider {
     }
 
     /**
-     * 获取文件的修改历史
+     * 获取文件的修改历史（分页版本）
+     */
+    async getFileHistoryPaginated(filePath: string, page: number = 0, pageSize: number = 20): Promise<PaginatedResult<GitCommit>> {
+        try {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
+            if (!workspaceFolder) {
+                throw new Error('文件不在工作区中');
+            }
+
+            const relativePath = vscode.workspace.asRelativePath(filePath);
+            const cwd = workspaceFolder.uri.fsPath;
+
+            // 首先获取总提交数
+            const countCommand = `git rev-list --count HEAD -- "${relativePath}"`;
+            const { stdout: countOutput } = await execAsync(countCommand, { cwd });
+            const totalCount = parseInt(countOutput.trim()) || 0;
+
+            // 计算跳过的提交数
+            const skip = page * pageSize;
+            
+            // 获取分页的提交历史
+            const logCommand = `git log --pretty=format:"%H|%an|%ad|%s" --date=short --follow --skip=${skip} --max-count=${pageSize} "${relativePath}"`;
+            const { stdout: logOutput } = await execAsync(logCommand, { cwd });
+
+            const commits: GitCommit[] = [];
+            const lines = logOutput.split('\n').filter((line: string) => line.trim());
+
+            for (const line of lines) {
+                const [hash, author, date, message] = line.split('|');
+
+                // 获取该提交中文件的变更统计
+                try {
+                    const statCommand = `git show --stat --pretty="" ${hash} -- "${relativePath}"`;
+                    const { stdout: statOutput } = await execAsync(statCommand, { cwd });
+
+                    commits.push({
+                        hash: hash.substring(0, 8),
+                        fullHash: hash,
+                        author,
+                        date,
+                        message,
+                        changes: statOutput.trim()
+                    });
+                } catch {
+                    commits.push({
+                        hash: hash.substring(0, 8),
+                        fullHash: hash,
+                        author,
+                        date,
+                        message
+                    });
+                }
+            }
+
+            const hasMore = skip + commits.length < totalCount;
+
+            return {
+                items: commits,
+                hasMore,
+                totalCount
+            };
+        } catch (error) {
+            vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
+            return { items: [], hasMore: false, totalCount: 0 };
+        }
+    }
+
+    /**
+     * 获取文件的修改历史（保持向后兼容）
      */
     async getFileHistory(filePath: string): Promise<GitCommit[]> {
         try {
