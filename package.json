@@ -1,20 +1,34 @@
 {
-  "name": "git-history-viewer",
-  "displayName": "Git History Viewer",
-  "description": "显示Git行修改历史和文件修改历史",
-  "version": "0.0.1",
+  "name": "git-liner",
+  "displayName": "Git Liner",
+  "description": "Minimalist Git line and file history tracker. Perfect companion to Git Graph for precise code traceability without UI clutter.",
+  "version": "1.0.0",
   "publisher": "crazykun",
   "author": {
     "name": "crazykun",
     "url": "https://github.com/crazykun"
   },
-  "icon": "src/logo.png",
+  "icon": "src/logo_optimized.png",
   "engines": {
     "vscode": "^1.75.0"
   },
   "activationEvents": [],
   "categories": [
+    "SCM Providers",
     "Other"
+  ],
+  "keywords": [
+    "git",
+    "history",
+    "blame",
+    "line history",
+    "file history",
+    "liner",
+    "code traceability",
+    "git log",
+    "source control",
+    "minimalist",
+    "git graph companion"
   ],
   "repository": {
     "type": "git",

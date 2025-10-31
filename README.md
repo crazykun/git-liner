@@ -1,9 +1,9 @@
-# Git History Viewer
+# Git Liner
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/crazykun/git-history-viewer/refs/heads/main/src/logo.png" alt="Git History Viewer Logo" width="128" height="128">
+  <img src="https://raw.githubusercontent.com/crazykun/git-history-viewer/refs/heads/main/src/logo_optimized.png" alt="Git Liner Logo" width="128" height="128">
   <br>
-  <em>一个极简主义的VSCode Git历史查看插件，专注于文件和代码行的历史追溯。</em>
+  <em>极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。</em>
 </div>
 
 ## 设计理念
@@ -12,7 +12,7 @@
 
 - **VSCode 原生 Git** - 用于日常提交、推送、拉取
 - **Git Graph** - 用于查看和管理分支图谱  
-- **Git History Viewer** - 用于深度查看某文件或代码行的历史
+- **Git Liner** - 用于深度查看某文件或代码行的历史
 
 三者配合，既保持界面简洁，又能满足所有Git操作需求。
 
@@ -41,7 +41,7 @@
 - UI元素太花哨，影响专注度  
 - 功能过于庞大，只需要基础历史查看
 
-那么这个极简的历史查看插件就是你的理想选择。
+那么Git Liner就是你的理想选择。
 
 ## 使用方法
 
