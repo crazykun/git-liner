@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 const execAsync = promisify(exec);
 
@@ -14,6 +17,7 @@ export interface GitCommit {
 }
 
 export class GitHistoryProvider {
+    private tempFiles: string[] = [];
 
     /**
      * 获取指定行的修改历史
@@ -127,65 +131,189 @@ export class GitHistoryProvider {
             const relativePath = vscode.workspace.asRelativePath(filePath);
             const cwd = workspaceFolder.uri.fsPath;
 
-            // 先尝试获取提交信息
-            const commitInfoCommand = `git show --pretty=format:"提交: %H%n作者: %an <%ae>%n日期: %ad%n%n%s%n%n%b" --date=local --no-patch ${commitHash}`;
+            // 获取提交信息用于标题
+            const commitInfoCommand = `git show --pretty=format:"%h %s" --no-patch ${commitHash}`;
             const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
 
-            // 获取文件差异
-            const diffCommand = `git show --pretty="" ${commitHash} -- "${relativePath}"`;
-            const { stdout: diffOutput } = await execAsync(diffCommand, { cwd });
-
-            let content = '';
-
-            // 添加提交信息
-            if (commitInfo.trim()) {
-                content += commitInfo.trim() + '\n\n';
-                content += '='.repeat(80) + '\n\n';
+            // 获取父提交hash
+            const parentCommand = `git rev-parse ${commitHash}^`;
+            let parentHash: string;
+            try {
+                const { stdout: parentOutput } = await execAsync(parentCommand, { cwd });
+                parentHash = parentOutput.trim();
+            } catch {
+                // 如果没有父提交（初始提交），使用空树
+                parentHash = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
             }
 
-            // 添加差异内容
-            if (diffOutput && diffOutput.trim()) {
-                content += diffOutput;
-            } else {
-                // 如果没有差异，可能是新文件或删除的文件
-                const showCommand = `git show ${commitHash} --name-status -- "${relativePath}"`;
+            // 检查文件在两个版本中是否存在
+            const checkFileInCommit = async (hash: string): Promise<boolean> => {
                 try {
-                    const { stdout: statusOutput } = await execAsync(showCommand, { cwd });
-                    if (statusOutput.includes('A\t')) {
-                        content += `文件在此提交中被添加\n\n`;
-                        // 显示完整文件内容
-                        const fullFileCommand = `git show ${commitHash}:"${relativePath}"`;
-                        const { stdout: fileContent } = await execAsync(fullFileCommand, { cwd });
-                        content += `+++ 新文件内容 +++\n${fileContent}`;
-                    } else if (statusOutput.includes('D\t')) {
-                        content += `文件在此提交中被删除`;
-                    } else {
-                        content += `该提交中没有找到文件 "${relativePath}" 的变更`;
-                    }
+                    await execAsync(`git cat-file -e ${hash}:"${relativePath}"`, { cwd });
+                    return true;
                 } catch {
-                    content += `无法获取文件变更信息`;
+                    return false;
                 }
+            };
+
+            const fileExistsInParent = await checkFileInCommit(parentHash);
+            const fileExistsInCommit = await checkFileInCommit(commitHash);
+
+            let leftContent = '';
+            let rightContent = '';
+
+            if (fileExistsInParent) {
+                // 获取父提交中的文件内容
+                const parentFileCommand = `git show ${parentHash}:"${relativePath}"`;
+                const { stdout: parentFileContent } = await execAsync(parentFileCommand, { cwd });
+                leftContent = parentFileContent;
+            } else {
+                leftContent = '';
             }
 
-            if (!content.trim()) {
-                vscode.window.showWarningMessage('该提交中没有找到文件的变更内容');
-                return;
+            if (fileExistsInCommit) {
+                // 获取当前提交中的文件内容
+                const currentFileCommand = `git show ${commitHash}:"${relativePath}"`;
+                const { stdout: currentFileContent } = await execAsync(currentFileCommand, { cwd });
+                rightContent = currentFileContent;
+            } else {
+                rightContent = '';
             }
 
-            // 创建一个新的文档来显示差异
-            const doc = await vscode.workspace.openTextDocument({
-                content: content,
-                language: 'diff'
-            });
+            // 创建临时文件
+            const tempDir = os.tmpdir();
+            const fileBaseName = path.basename(relativePath);
+            const fileExtension = path.extname(relativePath);
+            const baseName = path.basename(relativePath, fileExtension);
 
-            await vscode.window.showTextDocument(doc, {
-                preview: false,
-                viewColumn: vscode.ViewColumn.Beside
-            });
+            const leftTempFile = path.join(tempDir, `${baseName}_${parentHash.substring(0, 8)}${fileExtension}`);
+            const rightTempFile = path.join(tempDir, `${baseName}_${commitHash.substring(0, 8)}${fileExtension}`);
+
+            // 写入临时文件
+            await fs.promises.writeFile(leftTempFile, leftContent, 'utf8');
+            await fs.promises.writeFile(rightTempFile, rightContent, 'utf8');
+
+            // 记录临时文件以便后续清理
+            this.tempFiles.push(leftTempFile, rightTempFile);
+
+            // 创建URI
+            const leftUri = vscode.Uri.file(leftTempFile);
+            const rightUri = vscode.Uri.file(rightTempFile);
+
+            // 使用VS Code的内置diff功能
+            const title = `${commitInfo.trim()} - ${relativePath}`;
+            await vscode.commands.executeCommand(
+                'vscode.diff',
+                leftUri,
+                rightUri,
+                title,
+                {
+                    preview: false,
+                    viewColumn: vscode.ViewColumn.Active
+                }
+            );
+
+            // 设置文件为只读
+            setTimeout(async () => {
+                try {
+                    const leftDoc = await vscode.workspace.openTextDocument(leftUri);
+                    const rightDoc = await vscode.workspace.openTextDocument(rightUri);
+                    
+                    // 监听文档关闭事件来清理临时文件
+                    const disposable = vscode.workspace.onDidCloseTextDocument((doc) => {
+                        if (doc.uri.fsPath === leftTempFile || doc.uri.fsPath === rightTempFile) {
+                            this.cleanupTempFile(doc.uri.fsPath);
+                        }
+                    });
+
+                    // 5分钟后自动清理（防止内存泄漏）
+                    setTimeout(() => {
+                        disposable.dispose();
+                        this.cleanupTempFile(leftTempFile);
+                        this.cleanupTempFile(rightTempFile);
+                    }, 5 * 60 * 1000);
+
+                } catch (error) {
+                    console.error('设置只读模式失败:', error);
+                }
+            }, 100);
 
         } catch (error) {
             console.error('显示提交差异错误:', error);
             vscode.window.showErrorMessage(`显示提交差异失败: ${error}`);
         }
+    }
+
+    /**
+     * 清理临时文件
+     */
+    private cleanupTempFile(filePath: string): void {
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+            const index = this.tempFiles.indexOf(filePath);
+            if (index > -1) {
+                this.tempFiles.splice(index, 1);
+            }
+        } catch (error) {
+            console.error('清理临时文件失败:', error);
+        }
+    }
+
+    /**
+     * 清理所有临时文件
+     */
+    public dispose(): void {
+        for (const tempFile of this.tempFiles) {
+            this.cleanupTempFile(tempFile);
+        }
+        this.tempFiles = [];
+    }
+
+    /**
+     * 根据文件扩展名获取语言ID
+     */
+    private getLanguageIdFromExtension(extension: string): string {
+        const languageMap: { [key: string]: string } = {
+            'ts': 'typescript',
+            'js': 'javascript',
+            'tsx': 'typescriptreact',
+            'jsx': 'javascriptreact',
+            'py': 'python',
+            'java': 'java',
+            'cpp': 'cpp',
+            'c': 'c',
+            'cs': 'csharp',
+            'php': 'php',
+            'rb': 'ruby',
+            'go': 'go',
+            'rs': 'rust',
+            'swift': 'swift',
+            'kt': 'kotlin',
+            'scala': 'scala',
+            'html': 'html',
+            'css': 'css',
+            'scss': 'scss',
+            'sass': 'sass',
+            'less': 'less',
+            'json': 'json',
+            'xml': 'xml',
+            'yaml': 'yaml',
+            'yml': 'yaml',
+            'md': 'markdown',
+            'sh': 'shellscript',
+            'bash': 'shellscript',
+            'zsh': 'shellscript',
+            'fish': 'shellscript',
+            'ps1': 'powershell',
+            'sql': 'sql',
+            'dockerfile': 'dockerfile',
+            'makefile': 'makefile',
+            'gitignore': 'ignore',
+            'txt': 'plaintext'
+        };
+
+        return languageMap[extension.toLowerCase()] || 'plaintext';
     }
 }

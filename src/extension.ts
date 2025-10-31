@@ -1,31 +1,55 @@
 import * as vscode from 'vscode';
 import { GitHistoryProvider } from './gitHistoryProvider';
 import { showLineHistory, showFileHistory } from './commands';
-import { HistoryTreeProvider } from './historyTreeProvider';
+import { LineHistoryTreeProvider, FileHistoryTreeProvider, SmartRefreshManager } from './historyTreeProvider';
 import { GitHistoryStatusBar } from './statusBar';
 
+let gitHistoryProvider: GitHistoryProvider;
+
 export function activate(context: vscode.ExtensionContext) {
-    const gitHistoryProvider = new GitHistoryProvider();
-    const historyTreeProvider = new HistoryTreeProvider(gitHistoryProvider);
+    gitHistoryProvider = new GitHistoryProvider();
+    const lineHistoryTreeProvider = new LineHistoryTreeProvider(gitHistoryProvider);
+    const fileHistoryTreeProvider = new FileHistoryTreeProvider(gitHistoryProvider);
     const statusBar = new GitHistoryStatusBar();
 
     // 注册侧边栏视图
-    const treeView = vscode.window.createTreeView('gitHistoryViewer.historyView', {
-        treeDataProvider: historyTreeProvider,
+    const lineTreeView = vscode.window.createTreeView('gitHistoryViewer.lineHistoryView', {
+        treeDataProvider: lineHistoryTreeProvider,
         showCollapseAll: false
     });
 
+    const fileTreeView = vscode.window.createTreeView('gitHistoryViewer.fileHistoryView', {
+        treeDataProvider: fileHistoryTreeProvider,
+        showCollapseAll: false
+    });
+
+    // 创建智能刷新管理器
+    const smartRefreshManager = new SmartRefreshManager(
+        gitHistoryProvider,
+        lineHistoryTreeProvider,
+        fileHistoryTreeProvider,
+        lineTreeView,
+        fileTreeView
+    );
+
     // 更新视图标题
-    const updateViewTitle = () => {
-        const info = historyTreeProvider.getCurrentInfo();
-        if (info.type === 'file' && info.filePath) {
+    const updateLineViewTitle = () => {
+        const info = lineHistoryTreeProvider.getCurrentInfo();
+        if (info.filePath && info.lineNumber) {
             const fileName = vscode.workspace.asRelativePath(info.filePath);
-            treeView.title = `文件历史: ${fileName}`;
-        } else if (info.type === 'line' && info.filePath && info.lineNumber) {
-            const fileName = vscode.workspace.asRelativePath(info.filePath);
-            treeView.title = `行历史: ${fileName}:${info.lineNumber}`;
+            lineTreeView.title = `行历史: ${fileName}:${info.lineNumber}`;
         } else {
-            treeView.title = 'Git历史记录';
+            lineTreeView.title = '行历史';
+        }
+    };
+
+    const updateFileViewTitle = () => {
+        const info = fileHistoryTreeProvider.getCurrentInfo();
+        if (info.filePath) {
+            const fileName = vscode.workspace.asRelativePath(info.filePath);
+            fileTreeView.title = `文件历史: ${fileName}`;
+        } else {
+            fileTreeView.title = '文件历史';
         }
     };
 
@@ -35,8 +59,8 @@ export function activate(context: vscode.ExtensionContext) {
         async () => {
             const result = await showLineHistory(gitHistoryProvider);
             if (result) {
-                await historyTreeProvider.showLineHistory(result.filePath, result.lineNumber);
-                updateViewTitle();
+                await lineHistoryTreeProvider.showLineHistory(result.filePath, result.lineNumber);
+                updateLineViewTitle();
             }
         }
     );
@@ -46,16 +70,18 @@ export function activate(context: vscode.ExtensionContext) {
         async () => {
             const result = await showFileHistory(gitHistoryProvider);
             if (result) {
-                await historyTreeProvider.showFileHistory(result.filePath);
-                updateViewTitle();
+                await fileHistoryTreeProvider.showFileHistory(result.filePath);
+                updateFileViewTitle();
             }
         }
     );
 
     const refreshCommand = vscode.commands.registerCommand(
         'gitHistoryViewer.refresh',
-        () => {
-            historyTreeProvider.refresh();
+        async () => {
+            await smartRefreshManager.smartRefresh();
+            updateLineViewTitle();
+            updateFileViewTitle();
         }
     );
 
@@ -78,21 +104,35 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    const focusCommand = vscode.commands.registerCommand(
+        'gitHistoryViewer.focus',
+        async () => {
+            // 默认聚焦到文件历史视图
+            await vscode.commands.executeCommand('gitHistoryViewer.fileHistoryView.focus');
+        }
+    );
+
     // 监听编辑器变化以更新状态栏
     const onDidChangeActiveEditor = vscode.window.onDidChangeActiveTextEditor(() => {
         statusBar.updateStatusBar();
     });
 
     context.subscriptions.push(
-        treeView,
+        lineTreeView,
+        fileTreeView,
         statusBar,
         onDidChangeActiveEditor,
         showLineHistoryCommand,
         showFileHistoryCommand,
         refreshCommand,
         showCommitDiffCommand,
-        copyCommitHashCommand
+        copyCommitHashCommand,
+        focusCommand
     );
 }
 
-export function deactivate() {}
+export function deactivate() {
+    if (gitHistoryProvider) {
+        gitHistoryProvider.dispose();
+    }
+}

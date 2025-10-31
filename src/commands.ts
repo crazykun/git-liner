@@ -27,8 +27,8 @@ export async function showLineHistory(gitHistoryProvider: GitHistoryProvider): P
             return;
         }
 
-        // 显示快速选择（保持原有功能）
-        showCommitQuickPick(commits, gitHistoryProvider, filePath, `第 ${lineNumber} 行的修改历史`);
+        // 显示Git History活动栏
+        await vscode.commands.executeCommand('gitHistoryViewer.focus');
         
         // 返回信息给侧边栏
         return { filePath, lineNumber };
@@ -60,45 +60,11 @@ export async function showFileHistory(gitHistoryProvider: GitHistoryProvider): P
             return;
         }
 
-        // 显示快速选择（保持原有功能）
-        showCommitQuickPick(commits, gitHistoryProvider, filePath, `${fileName} 的修改历史`);
+        // 显示Git History活动栏
+        await vscode.commands.executeCommand('gitHistoryViewer.focus');
         
         // 返回信息给侧边栏
         return { filePath };
     });
 }
 
-/**
- * 显示提交选择列表
- */
-function showCommitQuickPick(
-    commits: GitCommit[], 
-    gitHistoryProvider: GitHistoryProvider, 
-    filePath: string,
-    title: string
-): void {
-    const items = commits.map(commit => ({
-        label: `$(git-commit) ${commit.hash}`,
-        description: `${commit.author} • ${commit.date}`,
-        detail: commit.message + (commit.changes ? ` • ${commit.changes}` : ''),
-        commit
-    }));
-
-    const quickPick = vscode.window.createQuickPick();
-    quickPick.title = title;
-    quickPick.placeholder = '选择一个提交查看详细差异';
-    quickPick.items = items;
-    quickPick.canSelectMany = false;
-
-    quickPick.onDidChangeSelection(async (selection: readonly vscode.QuickPickItem[]) => {
-        if (selection.length > 0) {
-            const selectedItem = selection[0] as any;
-            quickPick.hide();
-            // 使用完整的hash而不是截断的hash
-            await gitHistoryProvider.showCommitDiff(filePath, selectedItem.commit.fullHash);
-        }
-    });
-
-    quickPick.onDidHide(() => quickPick.dispose());
-    quickPick.show();
-}
