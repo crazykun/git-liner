@@ -4,7 +4,7 @@ import { GitHistoryProvider, GitCommit } from './gitHistoryProvider';
 /**
  * 显示行修改历史命令
  */
-export async function showLineHistory(gitHistoryProvider: GitHistoryProvider): Promise<void> {
+export async function showLineHistory(gitHistoryProvider: GitHistoryProvider): Promise<{filePath: string, lineNumber: number} | undefined> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         vscode.window.showWarningMessage('请先打开一个文件');
@@ -15,7 +15,7 @@ export async function showLineHistory(gitHistoryProvider: GitHistoryProvider): P
     const lineNumber = selection.active.line + 1; // VSCode行号从0开始，git从1开始
     const filePath = editor.document.fileName;
 
-    vscode.window.withProgress({
+    return vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "正在获取行修改历史...",
         cancellable: false
@@ -27,14 +27,18 @@ export async function showLineHistory(gitHistoryProvider: GitHistoryProvider): P
             return;
         }
 
+        // 显示快速选择（保持原有功能）
         showCommitQuickPick(commits, gitHistoryProvider, filePath, `第 ${lineNumber} 行的修改历史`);
+        
+        // 返回信息给侧边栏
+        return { filePath, lineNumber };
     });
 }
 
 /**
  * 显示文件修改历史命令
  */
-export async function showFileHistory(gitHistoryProvider: GitHistoryProvider): Promise<void> {
+export async function showFileHistory(gitHistoryProvider: GitHistoryProvider): Promise<{filePath: string} | undefined> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         vscode.window.showWarningMessage('请先打开一个文件');
@@ -44,7 +48,7 @@ export async function showFileHistory(gitHistoryProvider: GitHistoryProvider): P
     const filePath = editor.document.fileName;
     const fileName = vscode.workspace.asRelativePath(filePath);
 
-    vscode.window.withProgress({
+    return vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "正在获取文件修改历史...",
         cancellable: false
@@ -56,7 +60,11 @@ export async function showFileHistory(gitHistoryProvider: GitHistoryProvider): P
             return;
         }
 
+        // 显示快速选择（保持原有功能）
         showCommitQuickPick(commits, gitHistoryProvider, filePath, `${fileName} 的修改历史`);
+        
+        // 返回信息给侧边栏
+        return { filePath };
     });
 }
 

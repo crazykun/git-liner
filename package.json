@@ -3,6 +3,7 @@
   "displayName": "Git History Viewer",
   "description": "显示Git行修改历史和文件修改历史",
   "version": "0.0.1",
+  "icon": "src/logo.png",
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -18,34 +19,109 @@
     "url": "https://github.com/crazykun/git-history-viewer/issues"
   },
   "homepage": "https://github.com/crazykun/git-history-viewer#readme",
-
   "main": "./out/extension.js",
   "contributes": {
+    "views": {
+      "gitHistoryViewer": [
+        {
+          "id": "gitHistoryViewer.historyView",
+          "name": "Git历史记录",
+          "when": "gitOpenRepositoryCount != 0"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "gitHistoryViewer.historyView",
+        "contents": "欢迎使用Git历史查看器！\n\n要查看文件或行的Git历史记录，请：\n\n[显示文件历史](command:gitHistoryViewer.showFileHistory)\n\n[显示行历史](command:gitHistoryViewer.showLineHistory)\n\n或者在编辑器中右键选择相应选项。",
+        "when": "gitOpenRepositoryCount != 0"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gitHistoryViewer",
+          "title": "Git History",
+          "icon": "$(git-commit)"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "gitHistoryViewer.showLineHistory",
         "title": "显示行修改历史",
-        "category": "Git History"
+        "category": "Git History",
+        "icon": "$(symbol-method)"
       },
       {
         "command": "gitHistoryViewer.showFileHistory",
         "title": "显示文件修改历史",
-        "category": "Git History"
+        "category": "Git History",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "gitHistoryViewer.refresh",
+        "title": "刷新",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitHistoryViewer.showCommitDiff",
+        "title": "查看提交差异",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "gitHistoryViewer.copyCommitHash",
+        "title": "复制提交Hash",
+        "icon": "$(copy)"
       }
     ],
     "menus": {
       "editor/context": [
         {
           "command": "gitHistoryViewer.showLineHistory",
-          "when": "editorHasSelection",
+          "when": "editorHasSelection && gitOpenRepositoryCount != 0",
           "group": "navigation"
         },
         {
           "command": "gitHistoryViewer.showFileHistory",
+          "when": "gitOpenRepositoryCount != 0",
           "group": "navigation"
         }
+      ],
+      "view/title": [
+        {
+          "command": "gitHistoryViewer.refresh",
+          "when": "view == gitHistoryViewer.historyView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "gitHistoryViewer.showCommitDiff",
+          "when": "view == gitHistoryViewer.historyView && viewItem == commit",
+          "group": "inline"
+        },
+        {
+          "command": "gitHistoryViewer.copyCommitHash",
+          "when": "view == gitHistoryViewer.historyView && viewItem == commit",
+          "group": "inline"
+        }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "gitHistoryViewer.showFileHistory",
+        "key": "ctrl+alt+h",
+        "mac": "cmd+alt+h",
+        "when": "editorTextFocus && gitOpenRepositoryCount != 0"
+      },
+      {
+        "command": "gitHistoryViewer.showLineHistory",
+        "key": "ctrl+alt+l",
+        "mac": "cmd+alt+l",
+        "when": "editorHasSelection && gitOpenRepositoryCount != 0"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
