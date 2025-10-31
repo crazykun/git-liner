@@ -33,7 +33,7 @@
 ### 推荐组合
 - **VSCode 原生 Git** - 处理日常的提交、推送、拉取操作
 - **[Git Graph](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph)** - 可视化分支图谱，管理分支合并
-- **Git History Viewer** - 深度查看文件历史和代码行追溯
+- **[Git Liner](https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner)** - 深度查看文件历史和代码行追溯
 
 ### 为什么不用 GitLens？
 如果你也认为 GitLens 过于复杂，有以下困扰：
@@ -56,6 +56,10 @@
 3. 在弹出的列表中选择提交查看详细差异
 
 ## 安装
+
+### 从VSCode插件市场安装（推荐）
+直接在VSCode插件市场搜索 "Git Liner" 或访问：
+[https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner](https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner)
 
 ### 从源码安装
 1. 克隆此仓库

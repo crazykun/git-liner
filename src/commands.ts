@@ -42,8 +42,8 @@ export async function showLineHistory(gitHistoryProvider: GitHistoryProvider): P
         // 显示成功消息
         vscode.window.showInformationMessage(`找到第${lineNumber}行的${commits.length}个修改记录${displayContent ? `: "${displayContent}"` : ''}`);
 
-        // 显示Git History活动栏
-        await vscode.commands.executeCommand('gitHistoryViewer.focus');
+        // 显示Git Liner活动栏
+        await vscode.commands.executeCommand('gitLiner.focus');
         
         // 返回信息给侧边栏
         return { filePath, lineNumber };
@@ -75,8 +75,8 @@ export async function showFileHistory(gitHistoryProvider: GitHistoryProvider): P
             return;
         }
 
-        // 显示Git History活动栏
-        await vscode.commands.executeCommand('gitHistoryViewer.focus');
+        // 显示Git Liner活动栏
+        await vscode.commands.executeCommand('gitLiner.focus');
         
         // 返回信息给侧边栏
         return { filePath };

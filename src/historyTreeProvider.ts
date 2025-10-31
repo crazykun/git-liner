@@ -77,7 +77,7 @@ export class HistoryTreeItem extends vscode.TreeItem {
             
             // 行级别的差异命令
             this.command = {
-                command: 'gitHistoryViewer.showLineCommitDiff',
+                command: 'gitLiner.showLineCommitDiff',
                 title: '查看行级别差异',
                 arguments: [this.filePath, this.commit.fullHash, this.lineNumber]
             };
@@ -87,7 +87,7 @@ export class HistoryTreeItem extends vscode.TreeItem {
             
             // 文件级别的差异命令
             this.command = {
-                command: 'gitHistoryViewer.showCommitDiff',
+                command: 'gitLiner.showCommitDiff',
                 title: '查看文件差异',
                 arguments: [this.filePath, this.commit.fullHash]
             };
@@ -384,16 +384,16 @@ export class SmartRefreshManager {
     private smartFocus(shouldRefreshLine: boolean, shouldRefreshFile: boolean): void {
         if (shouldRefreshLine && !shouldRefreshFile) {
             // 只刷新了行历史，聚焦到行历史视图
-            vscode.commands.executeCommand('gitHistoryViewer.lineHistoryView.focus');
+            vscode.commands.executeCommand('gitLiner.lineHistoryView.focus');
         } else if (shouldRefreshFile && !shouldRefreshLine) {
             // 只刷新了文件历史，聚焦到文件历史视图
-            vscode.commands.executeCommand('gitHistoryViewer.fileHistoryView.focus');
+            vscode.commands.executeCommand('gitLiner.fileHistoryView.focus');
         } else if (shouldRefreshLine && shouldRefreshFile) {
             // 两个都刷新了，聚焦到当前可见的视图，或者默认文件历史
             if (this.lineTreeView.visible) {
-                vscode.commands.executeCommand('gitHistoryViewer.lineHistoryView.focus');
+                vscode.commands.executeCommand('gitLiner.lineHistoryView.focus');
             } else {
-                vscode.commands.executeCommand('gitHistoryViewer.fileHistoryView.focus');
+                vscode.commands.executeCommand('gitLiner.fileHistoryView.focus');
             }
         }
     }

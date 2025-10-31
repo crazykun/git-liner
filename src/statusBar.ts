@@ -8,7 +8,7 @@ export class GitHistoryStatusBar {
             vscode.StatusBarAlignment.Left,
             100
         );
-        this.statusBarItem.command = 'gitHistoryViewer.showFileHistory';
+        this.statusBarItem.command = 'gitLiner.showFileHistory';
         this.updateStatusBar();
     }
 

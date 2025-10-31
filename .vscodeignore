@@ -1,39 +1,21 @@
-# VSCode ignore file for extension packaging
-
-# Source files (users don't need these)
-src/**/*.ts          # TypeScript source files
-src/**/*.map         # Source map files
-src/logo.png         # Original large logo (we use optimized version)
-tsconfig.json        # TypeScript configuration
-
-# Development files (users don't need these)
-.vscode/             # VSCode workspace settings
-.gitignore           # Git ignore file
-*.vsix               # Previously packaged extensions
-
-# Documentation (keep only essential ones)
+src/**/*.ts
+src/**/*.map
+src/logo.png
+tsconfig.json
+.vscode/
+.gitignore
+*.vsix
 PUBLISH_GUIDE.md
 test-line-history.md
 INSTALL_AND_TEST.md
-
-# Scripts
+READY_TO_PUBLISH.md
 *.sh
-
-# Node modules (if any)
 node_modules/
-
-# Logs
 *.log
-
-# OS generated files
 .DS_Store
 Thumbs.db
-
-# IDE files
 .idea/
 *.swp
 *.swo
-
-# Temporary files
 *.tmp
 *.temp

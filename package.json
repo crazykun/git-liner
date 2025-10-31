@@ -1,8 +1,8 @@
 {
   "name": "git-liner",
   "displayName": "Git Liner",
-  "description": "Minimalist Git line and file history tracker. Perfect companion to Git Graph for precise code traceability without UI clutter.",
-  "version": "1.0.0",
+  "description": "极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。",
+  "version": "1.0.1",
   "publisher": "crazykun",
   "author": {
     "name": "crazykun",
@@ -41,14 +41,14 @@
   "main": "./out/extension.js",
   "contributes": {
     "views": {
-      "gitHistoryViewer": [
+      "gitLiner": [
         {
-          "id": "gitHistoryViewer.lineHistoryView",
+          "id": "gitLiner.lineHistoryView",
           "name": "行历史",
           "when": "gitOpenRepositoryCount != 0"
         },
         {
-          "id": "gitHistoryViewer.fileHistoryView",
+          "id": "gitLiner.fileHistoryView",
           "name": "文件历史",
           "when": "gitOpenRepositoryCount != 0"
         }
@@ -56,110 +56,110 @@
     },
     "viewsWelcome": [
       {
-        "view": "gitHistoryViewer.lineHistoryView",
-        "contents": "显示当前行的Git修改历史\n\n[显示行历史](command:gitHistoryViewer.showLineHistory)\n\n或者在编辑器中右键选择相应选项。",
+        "view": "gitLiner.lineHistoryView",
+        "contents": "显示当前行的Git修改历史\n\n[显示行历史](command:gitLiner.showLineHistory)\n\n或者在编辑器中右键选择相应选项。",
         "when": "gitOpenRepositoryCount != 0"
       },
       {
-        "view": "gitHistoryViewer.fileHistoryView",
-        "contents": "显示当前文件的Git修改历史\n\n[显示文件历史](command:gitHistoryViewer.showFileHistory)\n\n或者在编辑器中右键选择相应选项。",
+        "view": "gitLiner.fileHistoryView",
+        "contents": "显示当前文件的Git修改历史\n\n[显示文件历史](command:gitLiner.showFileHistory)\n\n或者在编辑器中右键选择相应选项。",
         "when": "gitOpenRepositoryCount != 0"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "gitHistoryViewer",
-          "title": "Git History",
+          "id": "gitLiner",
+          "title": "Git Liner",
           "icon": "$(git-commit)"
         }
       ]
     },
     "commands": [
       {
-        "command": "gitHistoryViewer.showLineHistory",
+        "command": "gitLiner.showLineHistory",
         "title": "显示行修改历史",
-        "category": "Git History",
+        "category": "Git Liner",
         "icon": "$(symbol-method)"
       },
       {
-        "command": "gitHistoryViewer.showFileHistory",
+        "command": "gitLiner.showFileHistory",
         "title": "显示文件修改历史",
-        "category": "Git History",
+        "category": "Git Liner",
         "icon": "$(file-text)"
       },
       {
-        "command": "gitHistoryViewer.refresh",
+        "command": "gitLiner.refresh",
         "title": "刷新",
         "icon": "$(refresh)"
       },
       {
-        "command": "gitHistoryViewer.showCommitDiff",
+        "command": "gitLiner.showCommitDiff",
         "title": "查看文件差异",
         "icon": "$(diff)"
       },
       {
-        "command": "gitHistoryViewer.showLineCommitDiff",
+        "command": "gitLiner.showLineCommitDiff",
         "title": "查看行级别差异",
         "icon": "$(symbol-line)"
       },
       {
-        "command": "gitHistoryViewer.copyCommitHash",
+        "command": "gitLiner.copyCommitHash",
         "title": "复制提交Hash",
         "icon": "$(copy)"
       },
       {
-        "command": "gitHistoryViewer.focus",
-        "title": "聚焦到Git历史视图"
+        "command": "gitLiner.focus",
+        "title": "聚焦到Git Liner视图"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "gitHistoryViewer.showLineHistory",
+          "command": "gitLiner.showLineHistory",
           "when": "gitOpenRepositoryCount != 0",
-          "group": "gitHistory@1"
+          "group": "gitLiner@1"
         },
         {
-          "command": "gitHistoryViewer.showFileHistory",
+          "command": "gitLiner.showFileHistory",
           "when": "gitOpenRepositoryCount != 0",
-          "group": "gitHistory@2"
+          "group": "gitLiner@2"
         }
       ],
       "view/title": [
         {
-          "command": "gitHistoryViewer.refresh",
-          "when": "view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView",
+          "command": "gitLiner.refresh",
+          "when": "view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "gitHistoryViewer.showCommitDiff",
-          "when": "(view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView) && viewItem == fileCommit",
+          "command": "gitLiner.showCommitDiff",
+          "when": "(view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView) && viewItem == fileCommit",
           "group": "inline"
         },
         {
-          "command": "gitHistoryViewer.showLineCommitDiff",
-          "when": "view == gitHistoryViewer.lineHistoryView && viewItem == lineCommit",
+          "command": "gitLiner.showLineCommitDiff",
+          "when": "view == gitLiner.lineHistoryView && viewItem == lineCommit",
           "group": "inline"
         },
         {
-          "command": "gitHistoryViewer.copyCommitHash",
-          "when": "(view == gitHistoryViewer.lineHistoryView || view == gitHistoryViewer.fileHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit)",
+          "command": "gitLiner.copyCommitHash",
+          "when": "(view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit)",
           "group": "inline"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "gitHistoryViewer.showFileHistory",
+        "command": "gitLiner.showFileHistory",
         "key": "ctrl+alt+h",
         "mac": "cmd+alt+h",
         "when": "editorTextFocus && gitOpenRepositoryCount != 0"
       },
       {
-        "command": "gitHistoryViewer.showLineHistory",
+        "command": "gitLiner.showLineHistory",
         "key": "ctrl+alt+l",
         "mac": "cmd+alt+l",
         "when": "editorTextFocus && gitOpenRepositoryCount != 0"
