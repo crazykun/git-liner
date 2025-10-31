@@ -4,6 +4,21 @@
   <img src="https://raw.githubusercontent.com/crazykun/git-liner/refs/heads/main/src/logo_optimized.png" alt="Git Liner Logo" width="128" height="128">
   <br>
   <em>极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。</em>
+  
+  <p>
+    <a href="https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner">
+      <img src="https://img.shields.io/visual-studio-marketplace/v/crazykun.git-liner?style=flat-square&label=VS%20Code%20Marketplace&logo=visual-studio-code" alt="VS Code Marketplace">
+    </a>
+    <a href="https://open-vsx.org/extension/crazykun/git-liner">
+      <img src="https://img.shields.io/open-vsx/v/crazykun/git-liner?style=flat-square&label=Open%20VSX&logo=eclipse" alt="Open VSX">
+    </a>
+    <a href="https://github.com/crazykun/git-liner">
+      <img src="https://img.shields.io/github/stars/crazykun/git-liner?style=flat-square&logo=github" alt="GitHub Stars">
+    </a>
+    <a href="https://github.com/crazykun/git-liner/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/crazykun/git-liner?style=flat-square" alt="License">
+    </a>
+  </p>
 </div>
 
 ## 设计理念
@@ -65,7 +80,9 @@ Git Liner 1.0.2 版本带来了革命性的性能提升：
 ## 🚀 快速开始
 
 ### 30秒上手指南
-1. **安装插件**: 在VSCode插件市场搜索"Git Liner"并安装
+1. **安装插件**: 
+   - **VS Code**: 插件市场搜索"Git Liner"
+   - **VSCodium/Theia**: Open VSX搜索"Git Liner"
 2. **打开文件**: 在Git仓库中打开任意代码文件
 3. **右键查看**: 右键选择"显示文件修改历史"
 4. **享受速度**: 1-2秒内看到历史记录，体验性能提升
@@ -100,20 +117,57 @@ Git Liner 1.0.2 版本带来了革命性的性能提升：
 
 ## 安装
 
-### 从VSCode插件市场安装（推荐）
-直接在VSCode插件市场搜索 "Git Liner" 或访问：
-[https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner](https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner)
+### 📦 插件市场安装（推荐）
 
-### 从源码安装
-1. 克隆此仓库
-2. 运行 `npm install` 安装依赖
-3. 运行 `npm run compile` 编译TypeScript
-4. 按 F5 在新的VSCode窗口中运行插件
+#### VS Code 插件市场
+适用于 **Microsoft VS Code** 用户：
+- 在VSCode插件市场搜索 "Git Liner"
+- 或访问：[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner)
 
-### 打包安装
-1. 安装 vsce: `npm install -g vsce`
-2. 运行 `vsce package` 生成 .vsix 文件
-3. 在VSCode中通过 "从VSIX安装" 安装插件
+#### Open VSX Registry  
+适用于 **VSCodium**、**Eclipse Theia**、**Gitpod** 等开源IDE用户：
+- 在Open VSX搜索 "Git Liner"  
+- 或访问：[Open VSX Registry](https://open-vsx.org/extension/crazykun/git-liner)
+
+### 🔧 手动安装方式
+
+#### 从源码安装
+```bash
+# 克隆仓库
+git clone https://github.com/crazykun/git-liner.git
+cd git-liner
+
+# 安装依赖
+npm install
+
+# 编译TypeScript
+npm run compile
+
+# 在VSCode中按F5运行插件
+```
+
+#### 从VSIX文件安装
+```bash
+# 1. 下载最新的.vsix文件
+# 从GitHub Releases页面下载
+
+# 2. 在VSCode中安装
+# 命令面板 → "Extensions: Install from VSIX..."
+# 选择下载的.vsix文件
+
+# 或使用命令行安装
+code --install-extension git-liner-1.0.2.vsix
+```
+
+### 🌍 支持的编辑器
+
+| 编辑器 | 安装来源 | 状态 |
+|--------|----------|------|
+| **VS Code** | VS Code Marketplace | ✅ 完全支持 |
+| **VSCodium** | Open VSX Registry | ✅ 完全支持 |
+| **Eclipse Theia** | Open VSX Registry | ✅ 完全支持 |
+| **Gitpod** | Open VSX Registry | ✅ 完全支持 |
+| **Code - OSS** | Open VSX Registry | ✅ 完全支持 |
 
 ## 📦 开发者指南
 
