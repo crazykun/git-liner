@@ -68,10 +68,10 @@ All notable changes to the "git-liner" extension will be documented in this file
 ## Support
 
 If you encounter any issues or have feature requests:
-- 🐛 [Report Issues](https://github.com/crazykun/git-history-viewer/issues)
-- 💡 [Feature Requests](https://github.com/crazykun/git-history-viewer/issues)
-- 📖 [Documentation](https://github.com/crazykun/git-history-viewer#readme)
+- 🐛 [Report Issues](https://github.com/crazykun/git-liner/issues)
+- 💡 [Feature Requests](https://github.com/crazykun/git-liner/issues)
+- 📖 [Documentation](https://github.com/crazykun/git-liner#readme)
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/crazykun/git-history-viewer/blob/main/CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/crazykun/git-liner/blob/main/CONTRIBUTING.md) for details.

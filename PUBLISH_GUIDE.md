@@ -46,7 +46,7 @@ vsce login crazykun
 
 #### 验证package.json配置
 确保以下字段正确：
-- ✅ `name`: "git-history-viewer"
+- ✅ `name`: "git-liner"
 - ✅ `displayName`: "Git History Viewer"  
 - ✅ `description`: 英文描述
 - ✅ `version`: "1.0.0"
@@ -71,7 +71,7 @@ npm run compile
 vsce package
 
 # 测试安装
-code --install-extension git-history-viewer-1.0.0.vsix
+code --install-extension git-liner-1.0.0.vsix
 ```
 
 ### 4. 发布插件
@@ -87,7 +87,7 @@ vsce publish
 vsce package
 
 # 发布
-vsce publish --packagePath git-history-viewer-1.0.0.vsix
+vsce publish --packagePath git-liner-1.0.0.vsix
 ```
 
 #### 发布特定版本
@@ -111,7 +111,7 @@ vsce publish 1.0.1
 #### 测试安装
 ```bash
 # 从市场安装
-code --install-extension crazykun.git-history-viewer
+code --install-extension crazykun.git-liner
 ```
 
 ### 6. 更新插件
@@ -134,7 +134,7 @@ vsce ls
 
 #### 取消发布（谨慎使用）
 ```bash
-vsce unpublish crazykun.git-history-viewer
+vsce unpublish crazykun.git-liner
 ```
 
 ## 🔧 常见问题解决

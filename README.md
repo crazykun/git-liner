@@ -1,7 +1,7 @@
 # Git Liner
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/crazykun/git-history-viewer/refs/heads/main/src/logo_optimized.png" alt="Git Liner Logo" width="128" height="128">
+  <img src="https://raw.githubusercontent.com/crazykun/git-liner/refs/heads/main/src/logo_optimized.png" alt="Git Liner Logo" width="128" height="128">
   <br>
   <em>极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。</em>
 </div>

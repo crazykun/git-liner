@@ -32,12 +32,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/crazykun/git-history-viewer.git"
+    "url": "https://github.com/crazykun/git-liner.git"
   },
   "bugs": {
-    "url": "https://github.com/crazykun/git-history-viewer/issues"
+    "url": "https://github.com/crazykun/git-liner/issues"
   },
-  "homepage": "https://github.com/crazykun/git-history-viewer#readme",
+  "homepage": "https://github.com/crazykun/git-liner#readme",
   "main": "./out/extension.js",
   "contributes": {
     "views": {
