@@ -14,7 +14,7 @@ export interface GitCommit {
 }
 
 export class GitHistoryProvider {
-    
+
     /**
      * 获取指定行的修改历史
      */
@@ -31,16 +31,16 @@ export class GitHistoryProvider {
             // 使用 git blame 获取行的修改历史
             const blameCommand = `git blame -L ${lineNumber},${lineNumber} --porcelain "${relativePath}"`;
             const { stdout: blameOutput } = await execAsync(blameCommand, { cwd });
-            
+
             const commitHash = blameOutput.split('\n')[0].split(' ')[0];
-            
+
             // 获取该提交的详细信息
             const logCommand = `git log --pretty=format:"%H|%an|%ad|%s" --date=short -n 10 "${relativePath}"`;
             const { stdout: logOutput } = await execAsync(logCommand, { cwd });
-            
+
             const commits: GitCommit[] = [];
             const lines = logOutput.split('\n').filter((line: string) => line.trim());
-            
+
             for (const line of lines) {
                 const [hash, author, date, message] = line.split('|');
                 commits.push({
@@ -51,7 +51,7 @@ export class GitHistoryProvider {
                     message
                 });
             }
-            
+
             return commits;
         } catch (error) {
             vscode.window.showErrorMessage(`获取行历史失败: ${error}`);
@@ -75,18 +75,18 @@ export class GitHistoryProvider {
             // 获取文件的提交历史
             const logCommand = `git log --pretty=format:"%H|%an|%ad|%s" --date=short --follow "${relativePath}"`;
             const { stdout: logOutput } = await execAsync(logCommand, { cwd });
-            
+
             const commits: GitCommit[] = [];
             const lines = logOutput.split('\n').filter((line: string) => line.trim());
-            
+
             for (const line of lines) {
                 const [hash, author, date, message] = line.split('|');
-                
+
                 // 获取该提交中文件的变更统计
                 try {
                     const statCommand = `git show --stat --pretty="" ${hash} -- "${relativePath}"`;
                     const { stdout: statOutput } = await execAsync(statCommand, { cwd });
-                    
+
                     commits.push({
                         hash: hash.substring(0, 8),
                         fullHash: hash,  // 保存完整hash
@@ -105,7 +105,7 @@ export class GitHistoryProvider {
                     });
                 }
             }
-            
+
             return commits;
         } catch (error) {
             vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
@@ -136,7 +136,7 @@ export class GitHistoryProvider {
             const { stdout: diffOutput } = await execAsync(diffCommand, { cwd });
 
             let content = '';
-            
+
             // 添加提交信息
             if (commitInfo.trim()) {
                 content += commitInfo.trim() + '\n\n';
@@ -177,7 +177,7 @@ export class GitHistoryProvider {
                 content: content,
                 language: 'diff'
             });
-            
+
             await vscode.window.showTextDocument(doc, {
                 preview: false,
                 viewColumn: vscode.ViewColumn.Beside
