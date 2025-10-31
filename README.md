@@ -115,6 +115,76 @@ Git Liner 1.0.2 版本带来了革命性的性能提升：
 2. 运行 `vsce package` 生成 .vsix 文件
 3. 在VSCode中通过 "从VSIX安装" 安装插件
 
+## 📦 开发者指南
+
+### 本地开发
+```bash
+# 克隆仓库
+git clone https://github.com/crazykun/git-liner.git
+cd git-liner
+
+# 安装依赖
+npm install
+
+# 编译TypeScript
+npm run compile
+
+# 开发模式（监听文件变化）
+npm run watch
+```
+
+### 打包与发布
+```bash
+# 1. 编译代码
+npm run compile
+
+# 2. 本地打包（生成 .vsix 文件）
+vsce package
+
+# 3. 发布到VSCode插件市场
+vsce publish
+
+# 4. 发布指定版本
+vsce publish 1.0.3
+
+# 5. 发布预发布版本
+vsce publish --pre-release
+```
+
+### 版本管理
+```bash
+# 更新版本号（自动更新package.json）
+npm version patch    # 1.0.2 -> 1.0.3
+npm version minor    # 1.0.2 -> 1.1.0  
+npm version major    # 1.0.2 -> 2.0.0
+
+# 手动更新版本号
+# 编辑 package.json 中的 "version" 字段
+```
+
+### 发布前检查清单
+- [ ] 代码编译无错误 (`npm run compile`)
+- [ ] 功能测试通过
+- [ ] 更新 CHANGELOG.md
+- [ ] 更新版本号
+- [ ] 提交所有更改到Git
+- [ ] 创建Git标签 (`git tag v1.0.3`)
+
+### 常用命令
+```bash
+# 查看打包内容
+vsce ls
+
+# 显示插件信息
+vsce show crazykun.git-liner
+
+# 登录发布账户
+vsce login crazykun
+
+# 生成个人访问令牌后登录
+vsce login <publisher-name>
+```
+
 ## 要求
 
 - VSCode 1.75.0 或更高版本
@@ -214,7 +284,45 @@ Git Liner: 分页加载 → 快速响应，低内存占用
 
 MIT License
 
-## 贡献
+## 🤝 贡献指南
+
+### 如何贡献
+1. **Fork** 本仓库
+2. **创建特性分支**: `git checkout -b feature/amazing-feature`
+3. **提交更改**: `git commit -m 'Add some amazing feature'`
+4. **推送分支**: `git push origin feature/amazing-feature`
+5. **创建 Pull Request**
+
+### 开发环境设置
+```bash
+# 1. Fork并克隆仓库
+git clone https://github.com/your-username/git-liner.git
+cd git-liner
+
+# 2. 安装依赖
+npm install
+
+# 3. 开始开发
+npm run watch
+
+# 4. 测试插件
+# 按 F5 在新VSCode窗口中运行插件
+```
+
+### 代码规范
+- 使用 TypeScript 进行开发
+- 遵循现有的代码风格
+- 添加适当的注释和文档
+- 确保所有功能都有错误处理
+
+### 提交规范
+- `feat:` 新功能
+- `fix:` 修复bug
+- `docs:` 文档更新
+- `style:` 代码格式调整
+- `refactor:` 代码重构
+- `perf:` 性能优化
+- `test:` 测试相关
 
 欢迎提交 Issue 和 Pull Request！
 
