@@ -177,12 +177,63 @@ ls -la src/logo.png
 - [ ] 插件市场中可以搜索到
 - [ ] 可以正常安装和使用
 
+## 🌐 发布到Open VSX Registry
+
+### 为什么要发布到Open VSX？
+Open VSX Registry是一个开源的插件市场，主要服务于：
+- **VSCodium** 用户（VS Code的开源版本）
+- **Eclipse Theia** 用户
+- **Gitpod** 等在线IDE
+- 企业内部的VS Code发行版
+
+### 1. 安装Open VSX发布工具
+```bash
+npm install -g ovsx
+```
+
+### 2. 创建Open VSX账号
+1. 访问 [Open VSX Registry](https://open-vsx.org/)
+2. 使用GitHub账号登录
+3. 创建访问令牌：用户头像 → "Access Tokens" → "Create new access token"
+4. 复制并保存token
+
+### 3. 配置发布环境
+```bash
+# 创建命名空间（首次发布需要）
+ovsx create-namespace crazykun
+
+# 设置访问令牌环境变量
+export OVSX_PAT=your_access_token_here
+```
+
+### 4. 发布到Open VSX
+```bash
+# 编译和打包
+npm run compile
+npx vsce package
+
+# 发布到Open VSX
+ovsx publish git-liner-1.0.2.vsix
+
+# 或使用发布脚本
+./publish-openvsx.sh
+```
+
+### 5. 验证Open VSX发布
+- 访问：https://open-vsx.org/extension/crazykun/git-liner
+- 确认插件信息正确显示
+
 ## 🎉 发布完成！
 
-恭喜！你的VSCode插件已成功发布到插件市场。现在全世界的开发者都可以搜索、安装和使用你的插件了！
+恭喜！你的VSCode插件已成功发布到两个插件市场：
+- ✅ **VSCode插件市场** - 服务VS Code用户
+- ✅ **Open VSX Registry** - 服务开源IDE用户
+
+现在全世界的开发者都可以搜索、安装和使用你的插件了！
 
 ### 下一步建议：
 1. 🌟 在GitHub上添加插件市场的徽章
 2. 📢 在社交媒体上宣传你的插件
 3. 📝 收集用户反馈并持续改进
 4. 🔄 定期更新和维护插件
+5. 🔄 同时维护两个市场的版本同步
