@@ -5,9 +5,17 @@
     "command.showFileHistory": "显示文件修改历史",
     "command.refresh": "刷新",
     "command.showCommitDiff": "查看文件差异",
+    "command.showLineCommitDiff": "查看行级别差异",
     "command.copyCommitHash": "复制提交Hash",
+    "command.focus": "聚焦到Git Liner视图",
+    "command.loadMoreLineHistory": "加载更多行历史",
+    "command.loadMoreFileHistory": "加载更多文件历史",
     "view.lineHistory": "行历史",
     "view.fileHistory": "文件历史",
     "welcome.lineHistory": "显示当前行的Git修改历史\n\n[显示行历史](command:gitLiner.showLineHistory)\n\n或者在编辑器中右键选择相应选项。",
-    "welcome.fileHistory": "显示当前文件的Git修改历史\n\n[显示文件历史](command:gitLiner.showFileHistory)\n\n或者在编辑器中右键选择相应选项。"
+    "welcome.fileHistory": "显示当前文件的Git修改历史\n\n[显示文件历史](command:gitLiner.showFileHistory)\n\n或者在编辑器中右键选择相应选项。",
+    "config.pageSize.description": "每页加载的提交数量",
+    "config.cacheTimeout.description": "缓存超时时间（毫秒）",
+    "config.showStatusBar.description": "在状态栏显示Git Liner信息",
+    "config.autoRefresh.description": "切换文件时自动刷新历史记录"
 }

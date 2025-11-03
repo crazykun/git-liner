@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { I18n } from './i18n';
 
 const execAsync = promisify(exec);
 
@@ -120,7 +121,7 @@ export class GitHistoryProvider {
                 totalCount: undefined, // 行历史的总数难以准确计算
             };
         } catch (error) {
-            vscode.window.showErrorMessage(`获取行历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
             return { items: [], hasMore: false, totalCount: 0 };
         }
     }
@@ -202,7 +203,7 @@ export class GitHistoryProvider {
 
             return commits;
         } catch (error) {
-            vscode.window.showErrorMessage(`获取行历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
             return [];
         }
     }
@@ -274,7 +275,7 @@ export class GitHistoryProvider {
                 totalCount,
             };
         } catch (error) {
-            vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
             return { items: [], hasMore: false, totalCount: 0 };
         }
     }
@@ -328,7 +329,7 @@ export class GitHistoryProvider {
 
             return commits;
         } catch (error) {
-            vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
             return [];
         }
     }
@@ -344,7 +345,7 @@ export class GitHistoryProvider {
         try {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             if (!workspaceFolder) {
-                vscode.window.showErrorMessage('文件不在工作区中');
+                vscode.window.showErrorMessage(I18n.t('fileNotInWorkspace'));
                 return;
             }
 
@@ -398,7 +399,7 @@ export class GitHistoryProvider {
             await this.showCommitDiff(filePath, commitHash);
         } catch (error) {
             console.error('显示行级别差异错误:', error);
-            vscode.window.showErrorMessage(`显示行级别差异失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToShowDiff', error));
         }
     }
 
@@ -409,7 +410,7 @@ export class GitHistoryProvider {
         try {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             if (!workspaceFolder) {
-                vscode.window.showErrorMessage('文件不在工作区中');
+                vscode.window.showErrorMessage(I18n.t('fileNotInWorkspace'));
                 return;
             }
 
@@ -526,7 +527,7 @@ export class GitHistoryProvider {
             }, 100);
         } catch (error) {
             console.error('显示提交差异错误:', error);
-            vscode.window.showErrorMessage(`显示提交差异失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToShowDiff', error));
         }
     }
 

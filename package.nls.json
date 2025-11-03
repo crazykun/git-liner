@@ -5,9 +5,17 @@
     "command.showFileHistory": "Show File History",
     "command.refresh": "Refresh",
     "command.showCommitDiff": "Show File Diff",
+    "command.showLineCommitDiff": "Show Line Diff",
     "command.copyCommitHash": "Copy Commit Hash",
+    "command.focus": "Focus on Git Liner View",
+    "command.loadMoreLineHistory": "Load More Line History",
+    "command.loadMoreFileHistory": "Load More File History",
     "view.lineHistory": "Line History",
     "view.fileHistory": "File History",
     "welcome.lineHistory": "Show Git modification history for the current line\n\n[Show Line History](command:gitLiner.showLineHistory)\n\nOr right-click in the editor to select the corresponding option.",
-    "welcome.fileHistory": "Show Git modification history for the current file\n\n[Show File History](command:gitLiner.showFileHistory)\n\nOr right-click in the editor to select the corresponding option."
+    "welcome.fileHistory": "Show Git modification history for the current file\n\n[Show File History](command:gitLiner.showFileHistory)\n\nOr right-click in the editor to select the corresponding option.",
+    "config.pageSize.description": "Number of commits to load per page",
+    "config.cacheTimeout.description": "Cache timeout in milliseconds",
+    "config.showStatusBar.description": "Show Git Liner information in status bar",
+    "config.autoRefresh.description": "Automatically refresh history when switching files"
 }

@@ -2,6 +2,27 @@
 
 All notable changes to the "git-liner" extension will be documented in this file.
 
+## [1.0.4] - 2024-11-03
+
+### Added
+- 🌍 **Complete Internationalization Support**: Full Chinese and English language support
+  - Right-click context menu items now support both languages
+  - Left sidebar panel titles and content are fully localized
+  - All command titles in command palette are internationalized
+  - Configuration descriptions support multiple languages
+  - Error messages and notifications are localized
+  - Welcome page content adapts to user's language setting
+
+### Improved
+- **User Experience**: Interface automatically adapts to VSCode's language setting
+- **Accessibility**: Better support for Chinese-speaking developers
+- **Code Quality**: Centralized internationalization management with I18n utility class
+
+### Technical
+- Added `src/i18n.ts` for runtime internationalization
+- Updated `package.nls.json` and `package.nls.zh-cn.json` with complete translations
+- All hardcoded Chinese text replaced with internationalization keys
+
 ## [1.0.2] - 2024-10-31
 
 ### Added

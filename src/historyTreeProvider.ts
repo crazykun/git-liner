@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { GitHistoryProvider, GitCommit, PaginatedResult } from './gitHistoryProvider';
+import { I18n } from './i18n';
 
 interface CacheKey {
     filePath: string;
@@ -160,7 +161,7 @@ export class LineHistoryTreeProvider
             this.hasMore = result.hasMore;
             this.refresh();
         } catch (error) {
-            vscode.window.showErrorMessage(`获取行历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
         }
     }
 
@@ -183,7 +184,7 @@ export class LineHistoryTreeProvider
             this.currentPage = page;
             this.refresh();
         } catch (error) {
-            vscode.window.showErrorMessage(`加载更多行历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
         }
     }
 
@@ -201,7 +202,7 @@ export class LineHistoryTreeProvider
     async refreshFromCurrentEditor(): Promise<void> {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showWarningMessage('请先打开一个文件');
+            vscode.window.showWarningMessage(I18n.t('noActiveEditor'));
             return;
         }
 
@@ -285,7 +286,7 @@ export class FileHistoryTreeProvider
             this.hasMore = result.hasMore;
             this.refresh();
         } catch (error) {
-            vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
         }
     }
 
@@ -307,7 +308,7 @@ export class FileHistoryTreeProvider
             this.currentPage = page;
             this.refresh();
         } catch (error) {
-            vscode.window.showErrorMessage(`加载更多文件历史失败: ${error}`);
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
         }
     }
 
@@ -320,7 +321,7 @@ export class FileHistoryTreeProvider
     async refreshFromCurrentEditor(): Promise<void> {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showWarningMessage('请先打开一个文件');
+            vscode.window.showWarningMessage(I18n.t('noActiveEditor'));
             return;
         }
 
@@ -385,7 +386,7 @@ export class SmartRefreshManager {
     async smartRefresh(): Promise<void> {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showWarningMessage('请先打开一个文件');
+            vscode.window.showWarningMessage(I18n.t('noActiveEditor'));
             return;
         }
 
@@ -396,7 +397,7 @@ export class SmartRefreshManager {
         // 检查是否是Git仓库中的文件
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
         if (!workspaceFolder) {
-            vscode.window.showWarningMessage('文件不在工作区中');
+            vscode.window.showWarningMessage(I18n.t('fileNotInWorkspace'));
             return;
         }
 

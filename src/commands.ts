@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { GitHistoryProvider, GitCommit } from './gitHistoryProvider';
+import { I18n } from './i18n';
 
 /**
  * 显示行修改历史命令
@@ -9,7 +10,7 @@ export async function showLineHistory(
 ): Promise<{ filePath: string; lineNumber: number } | undefined> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-        vscode.window.showWarningMessage('请先打开一个文件');
+        vscode.window.showWarningMessage(I18n.t('noActiveEditor'));
         return;
     }
 
@@ -20,7 +21,7 @@ export async function showLineHistory(
     // 检查文件是否在Git仓库中
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
     if (!workspaceFolder) {
-        vscode.window.showWarningMessage('文件不在工作区中');
+        vscode.window.showWarningMessage(I18n.t('fileNotInWorkspace'));
         return;
     }
 
@@ -33,23 +34,25 @@ export async function showLineHistory(
     return vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
-            title: `正在获取第${lineNumber}行的修改历史...`,
+            title: I18n.t('loadingHistory'),
             cancellable: false,
         },
         async () => {
             const commits = await gitHistoryProvider.getLineHistory(filePath, lineNumber);
 
             if (commits.length === 0) {
-                vscode.window.showInformationMessage(
-                    `第${lineNumber}行未找到修改历史${displayContent ? `: "${displayContent}"` : ''}`
-                );
+                const message = I18n.isChinese() 
+                    ? `第${lineNumber}行未找到修改历史${displayContent ? `: "${displayContent}"` : ''}`
+                    : `No history found for line ${lineNumber}${displayContent ? `: "${displayContent}"` : ''}`;
+                vscode.window.showInformationMessage(message);
                 return;
             }
 
             // 显示成功消息
-            vscode.window.showInformationMessage(
-                `找到第${lineNumber}行的${commits.length}个修改记录${displayContent ? `: "${displayContent}"` : ''}`
-            );
+            const message = I18n.isChinese()
+                ? `找到第${lineNumber}行的${commits.length}个修改记录${displayContent ? `: "${displayContent}"` : ''}`
+                : `Found ${commits.length} commits for line ${lineNumber}${displayContent ? `: "${displayContent}"` : ''}`;
+            vscode.window.showInformationMessage(message);
 
             // 显示Git Liner活动栏
             await vscode.commands.executeCommand('gitLiner.focus');
@@ -68,7 +71,7 @@ export async function showFileHistory(
 ): Promise<{ filePath: string } | undefined> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-        vscode.window.showWarningMessage('请先打开一个文件');
+        vscode.window.showWarningMessage(I18n.t('noActiveEditor'));
         return;
     }
 
@@ -78,14 +81,14 @@ export async function showFileHistory(
     return vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
-            title: '正在获取文件修改历史...',
+            title: I18n.t('loadingHistory'),
             cancellable: false,
         },
         async () => {
             const commits = await gitHistoryProvider.getFileHistory(filePath);
 
             if (commits.length === 0) {
-                vscode.window.showInformationMessage('未找到文件的修改历史');
+                vscode.window.showInformationMessage(I18n.t('noHistoryFound'));
                 return;
             }
 

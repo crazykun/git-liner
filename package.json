@@ -2,7 +2,7 @@
   "name": "git-liner",
   "displayName": "Git Liner",
   "description": "极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "crazykun",
   "author": {
     "name": "crazykun",
@@ -44,12 +44,12 @@
       "gitLiner": [
         {
           "id": "gitLiner.lineHistoryView",
-          "name": "行历史",
+          "name": "%view.lineHistory%",
           "when": "gitOpenRepositoryCount != 0"
         },
         {
           "id": "gitLiner.fileHistoryView",
-          "name": "文件历史",
+          "name": "%view.fileHistory%",
           "when": "gitOpenRepositoryCount != 0"
         }
       ]
@@ -57,12 +57,12 @@
     "viewsWelcome": [
       {
         "view": "gitLiner.lineHistoryView",
-        "contents": "显示当前行的Git修改历史\n\n[显示行历史](command:gitLiner.showLineHistory)\n\n或者在编辑器中右键选择相应选项。",
+        "contents": "%welcome.lineHistory%",
         "when": "gitOpenRepositoryCount != 0"
       },
       {
         "view": "gitLiner.fileHistoryView",
-        "contents": "显示当前文件的Git修改历史\n\n[显示文件历史](command:gitLiner.showFileHistory)\n\n或者在编辑器中右键选择相应选项。",
+        "contents": "%welcome.fileHistory%",
         "when": "gitOpenRepositoryCount != 0"
       }
     ],
@@ -78,48 +78,48 @@
     "commands": [
       {
         "command": "gitLiner.showLineHistory",
-        "title": "显示行修改历史",
+        "title": "%command.showLineHistory%",
         "category": "Git Liner",
         "icon": "$(symbol-method)"
       },
       {
         "command": "gitLiner.showFileHistory",
-        "title": "显示文件修改历史",
+        "title": "%command.showFileHistory%",
         "category": "Git Liner",
         "icon": "$(file-text)"
       },
       {
         "command": "gitLiner.refresh",
-        "title": "刷新",
+        "title": "%command.refresh%",
         "icon": "$(refresh)"
       },
       {
         "command": "gitLiner.showCommitDiff",
-        "title": "查看文件差异",
+        "title": "%command.showCommitDiff%",
         "icon": "$(diff)"
       },
       {
         "command": "gitLiner.showLineCommitDiff",
-        "title": "查看行级别差异",
+        "title": "%command.showLineCommitDiff%",
         "icon": "$(symbol-line)"
       },
       {
         "command": "gitLiner.copyCommitHash",
-        "title": "复制提交Hash",
+        "title": "%command.copyCommitHash%",
         "icon": "$(copy)"
       },
       {
         "command": "gitLiner.focus",
-        "title": "聚焦到Git Liner视图"
+        "title": "%command.focus%"
       },
       {
         "command": "gitLiner.loadMoreLineHistory",
-        "title": "加载更多行历史",
+        "title": "%command.loadMoreLineHistory%",
         "icon": "$(refresh)"
       },
       {
         "command": "gitLiner.loadMoreFileHistory",
-        "title": "加载更多文件历史",
+        "title": "%command.loadMoreFileHistory%",
         "icon": "$(refresh)"
       }
     ],
@@ -167,26 +167,26 @@
         "gitLiner.pageSize": {
           "type": "number",
           "default": 20,
-          "description": "Number of commits to load per page",
+          "description": "%config.pageSize.description%",
           "minimum": 5,
           "maximum": 100
         },
         "gitLiner.cacheTimeout": {
           "type": "number",
           "default": 30000,
-          "description": "Cache timeout in milliseconds",
+          "description": "%config.cacheTimeout.description%",
           "minimum": 1000,
           "maximum": 300000
         },
         "gitLiner.showStatusBar": {
           "type": "boolean",
           "default": false,
-          "description": "Show Git Liner information in status bar"
+          "description": "%config.showStatusBar.description%"
         },
         "gitLiner.autoRefresh": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically refresh history when switching files"
+          "description": "%config.autoRefresh.description%"
         }
       }
     },

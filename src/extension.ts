@@ -7,10 +7,14 @@ import {
     SmartRefreshManager,
 } from './historyTreeProvider';
 import { GitHistoryStatusBar } from './statusBar';
+import { I18n } from './i18n';
 
 let gitHistoryProvider: GitHistoryProvider;
 
 export function activate(context: vscode.ExtensionContext) {
+    // 初始化国际化
+    I18n.init(context);
+    
     gitHistoryProvider = new GitHistoryProvider();
     const lineHistoryTreeProvider = new LineHistoryTreeProvider(gitHistoryProvider);
     const fileHistoryTreeProvider = new FileHistoryTreeProvider(gitHistoryProvider);
@@ -41,9 +45,9 @@ export function activate(context: vscode.ExtensionContext) {
         const info = lineHistoryTreeProvider.getCurrentInfo();
         if (info.filePath && info.lineNumber) {
             const fileName = vscode.workspace.asRelativePath(info.filePath);
-            lineTreeView.title = `行历史: ${fileName}:${info.lineNumber}`;
+            lineTreeView.title = I18n.t('lineHistory.titleWithFile', fileName, info.lineNumber);
         } else {
-            lineTreeView.title = '行历史';
+            lineTreeView.title = I18n.t('lineHistory.title');
         }
     };
 
@@ -51,9 +55,9 @@ export function activate(context: vscode.ExtensionContext) {
         const info = fileHistoryTreeProvider.getCurrentInfo();
         if (info.filePath) {
             const fileName = vscode.workspace.asRelativePath(info.filePath);
-            fileTreeView.title = `文件历史: ${fileName}`;
+            fileTreeView.title = I18n.t('fileHistory.titleWithFile', fileName);
         } else {
-            fileTreeView.title = '文件历史';
+            fileTreeView.title = I18n.t('fileHistory.title');
         }
     };
 
@@ -109,7 +113,7 @@ export function activate(context: vscode.ExtensionContext) {
         async (item: any) => {
             if (item && item.commit) {
                 await vscode.env.clipboard.writeText(item.commit.fullHash);
-                vscode.window.showInformationMessage(`已复制提交Hash: ${item.commit.hash}`);
+                vscode.window.showInformationMessage(I18n.t('copyCommitHash.success', item.commit.hash));
             }
         }
     );
