@@ -356,47 +356,11 @@ export class GitHistoryProvider {
             const commitInfoCommand = `git show --pretty=format:"%h %s" --no-patch ${commitHash}`;
             const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
 
-            // 使用 git log -L 获取该行在这个提交中的具体变化
-            const lineLogCommand = `git log -L ${lineNumber},${lineNumber}:"${relativePath}" --pretty=format:"" -p ${commitHash}^..${commitHash}`;
-
-            try {
-                const { stdout: lineDiff } = await execAsync(lineLogCommand, { cwd });
-
-                if (lineDiff.trim()) {
-                    // 创建一个临时文件显示行级别的差异
-                    const tempDir = os.tmpdir();
-                    const diffFile = path.join(
-                        tempDir,
-                        `line_${lineNumber}_diff_${commitHash.substring(0, 8)}.diff`
-                    );
-
-                    const diffContent = `行 ${lineNumber} 在提交 ${commitInfo.trim()} 中的变化:\n\n${lineDiff}`;
-                    await fs.promises.writeFile(diffFile, diffContent, 'utf8');
-
-                    this.tempFiles.push(diffFile);
-
-                    const diffUri = vscode.Uri.file(diffFile);
-                    await vscode.window.showTextDocument(diffUri, {
-                        preview: false,
-                        viewColumn: vscode.ViewColumn.Active,
-                    });
-
-                    // 清理临时文件
-                    setTimeout(
-                        () => {
-                            this.cleanupTempFile(diffFile);
-                        },
-                        5 * 60 * 1000
-                    ); // 5分钟后清理
-
-                    return;
-                }
-            } catch (error) {
-                console.log('行级别差异获取失败，回退到文件级别差异:', error);
-            }
-
-            // 如果行级别差异获取失败，回退到显示整个文件的差异
-            await this.showCommitDiff(filePath, commitHash);
+            // 直接使用文件级别的差异显示，但在标题中标明是针对特定行的
+            const title = `行 ${lineNumber} - ${commitInfo.trim()} - ${relativePath}`;
+            
+            // 调用文件级别的差异显示，但使用特定的标题
+            await this.showCommitDiffWithTitle(filePath, commitHash, title, lineNumber);
         } catch (error) {
             console.error('显示行级别差异错误:', error);
             vscode.window.showErrorMessage(I18n.t('error.failedToShowDiff', error));
@@ -404,9 +368,14 @@ export class GitHistoryProvider {
     }
 
     /**
-     * 显示提交的详细差异
+     * 显示提交的详细差异（带自定义标题和行号高亮）
      */
-    async showCommitDiff(filePath: string, commitHash: string): Promise<void> {
+    private async showCommitDiffWithTitle(
+        filePath: string, 
+        commitHash: string, 
+        customTitle?: string,
+        highlightLineNumber?: number
+    ): Promise<void> {
         try {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             if (!workspaceFolder) {
@@ -492,12 +461,28 @@ export class GitHistoryProvider {
             const leftUri = vscode.Uri.file(leftTempFile);
             const rightUri = vscode.Uri.file(rightTempFile);
 
-            // 使用VS Code的内置diff功能
-            const title = `${commitInfo.trim()} - ${relativePath}`;
+            // 使用自定义标题或默认标题
+            const title = customTitle || `${commitInfo.trim()} - ${relativePath}`;
             await vscode.commands.executeCommand('vscode.diff', leftUri, rightUri, title, {
                 preview: false,
                 viewColumn: vscode.ViewColumn.Active,
             });
+
+            // 如果指定了行号，尝试跳转到该行
+            if (highlightLineNumber) {
+                setTimeout(async () => {
+                    try {
+                        const activeEditor = vscode.window.activeTextEditor;
+                        if (activeEditor) {
+                            const position = new vscode.Position(Math.max(0, highlightLineNumber - 1), 0);
+                            activeEditor.selection = new vscode.Selection(position, position);
+                            activeEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+                        }
+                    } catch (error) {
+                        console.error('跳转到指定行失败:', error);
+                    }
+                }, 500);
+            }
 
             // 设置文件为只读
             setTimeout(async () => {
@@ -529,6 +514,13 @@ export class GitHistoryProvider {
             console.error('显示提交差异错误:', error);
             vscode.window.showErrorMessage(I18n.t('error.failedToShowDiff', error));
         }
+    }
+
+    /**
+     * 显示提交的详细差异
+     */
+    async showCommitDiff(filePath: string, commitHash: string): Promise<void> {
+        await this.showCommitDiffWithTitle(filePath, commitHash);
     }
 
     /**
