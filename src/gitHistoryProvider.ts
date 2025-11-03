@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 export interface GitCommit {
     hash: string;
-    fullHash: string;  // 添加完整hash
+    fullHash: string; // 添加完整hash
     author: string;
     date: string;
     message: string;
@@ -28,7 +28,12 @@ export class GitHistoryProvider {
     /**
      * 获取指定行的修改历史（分页版本）
      */
-    async getLineHistoryPaginated(filePath: string, lineNumber: number, page: number = 0, pageSize: number = 20): Promise<PaginatedResult<GitCommit>> {
+    async getLineHistoryPaginated(
+        filePath: string,
+        lineNumber: number,
+        page: number = 0,
+        pageSize: number = 20
+    ): Promise<PaginatedResult<GitCommit>> {
         try {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             if (!workspaceFolder) {
@@ -50,20 +55,25 @@ export class GitHistoryProvider {
 
             for (const line of lines) {
                 // 跳过diff输出行，只处理提交信息行
-                if (line.includes('|') && !line.startsWith('@@') && !line.startsWith('+++') && !line.startsWith('---')) {
+                if (
+                    line.includes('|') &&
+                    !line.startsWith('@@') &&
+                    !line.startsWith('+++') &&
+                    !line.startsWith('---')
+                ) {
                     const parts = line.split('|');
                     if (parts.length >= 4) {
                         const [hash, author, date, ...messageParts] = parts;
                         const message = messageParts.join('|');
-                        
+
                         // 避免重复添加相同的提交
-                        if (!commits.find(c => c.fullHash === hash)) {
+                        if (!commits.find((c) => c.fullHash === hash)) {
                             commits.push({
                                 hash: hash.substring(0, 8),
                                 fullHash: hash,
                                 author,
                                 date,
-                                message
+                                message,
                             });
                         }
                     }
@@ -78,24 +88,24 @@ export class GitHistoryProvider {
                 const blameCommand = `git blame -L ${lineNumber},${lineNumber} --porcelain "${relativePath}"`;
                 try {
                     const { stdout: blameOutput } = await execAsync(blameCommand, { cwd });
-                    
+
                     if (blameOutput.trim()) {
                         const commitHash = blameOutput.split('\n')[0].split(' ')[0];
-                        
+
                         // 获取该提交的详细信息
                         const commitInfoCommand = `git show --pretty=format:"%H|%an|%ad|%s" --no-patch ${commitHash}`;
                         const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
-                        
+
                         if (commitInfo.trim()) {
                             const [hash, author, date, ...messageParts] = commitInfo.split('|');
                             const message = messageParts.join('|');
-                            
+
                             commits.push({
                                 hash: hash.substring(0, 8),
                                 fullHash: hash,
                                 author,
                                 date,
-                                message
+                                message,
                             });
                         }
                     }
@@ -107,7 +117,7 @@ export class GitHistoryProvider {
             return {
                 items: commits,
                 hasMore,
-                totalCount: undefined // 行历史的总数难以准确计算
+                totalCount: undefined, // 行历史的总数难以准确计算
             };
         } catch (error) {
             vscode.window.showErrorMessage(`获取行历史失败: ${error}`);
@@ -138,20 +148,25 @@ export class GitHistoryProvider {
 
             for (const line of lines) {
                 // 跳过diff输出行，只处理提交信息行
-                if (line.includes('|') && !line.startsWith('@@') && !line.startsWith('+++') && !line.startsWith('---')) {
+                if (
+                    line.includes('|') &&
+                    !line.startsWith('@@') &&
+                    !line.startsWith('+++') &&
+                    !line.startsWith('---')
+                ) {
                     const parts = line.split('|');
                     if (parts.length >= 4) {
                         const [hash, author, date, ...messageParts] = parts;
                         const message = messageParts.join('|'); // 重新组合消息，防止消息中包含|字符
-                        
+
                         // 避免重复添加相同的提交
-                        if (!commits.find(c => c.fullHash === hash)) {
+                        if (!commits.find((c) => c.fullHash === hash)) {
                             commits.push({
                                 hash: hash.substring(0, 8),
                                 fullHash: hash,
                                 author,
                                 date,
-                                message
+                                message,
                             });
                         }
                     }
@@ -162,24 +177,24 @@ export class GitHistoryProvider {
             if (commits.length === 0) {
                 const blameCommand = `git blame -L ${lineNumber},${lineNumber} --porcelain "${relativePath}"`;
                 const { stdout: blameOutput } = await execAsync(blameCommand, { cwd });
-                
+
                 if (blameOutput.trim()) {
                     const commitHash = blameOutput.split('\n')[0].split(' ')[0];
-                    
+
                     // 获取该提交的详细信息
                     const commitInfoCommand = `git show --pretty=format:"%H|%an|%ad|%s" --no-patch ${commitHash}`;
                     const { stdout: commitInfo } = await execAsync(commitInfoCommand, { cwd });
-                    
+
                     if (commitInfo.trim()) {
                         const [hash, author, date, ...messageParts] = commitInfo.split('|');
                         const message = messageParts.join('|');
-                        
+
                         commits.push({
                             hash: hash.substring(0, 8),
                             fullHash: hash,
                             author,
                             date,
-                            message
+                            message,
                         });
                     }
                 }
@@ -195,7 +210,11 @@ export class GitHistoryProvider {
     /**
      * 获取文件的修改历史（分页版本）
      */
-    async getFileHistoryPaginated(filePath: string, page: number = 0, pageSize: number = 20): Promise<PaginatedResult<GitCommit>> {
+    async getFileHistoryPaginated(
+        filePath: string,
+        page: number = 0,
+        pageSize: number = 20
+    ): Promise<PaginatedResult<GitCommit>> {
         try {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             if (!workspaceFolder) {
@@ -212,7 +231,7 @@ export class GitHistoryProvider {
 
             // 计算跳过的提交数
             const skip = page * pageSize;
-            
+
             // 获取分页的提交历史
             const logCommand = `git log --pretty=format:"%H|%an|%ad|%s" --date=short --follow --skip=${skip} --max-count=${pageSize} "${relativePath}"`;
             const { stdout: logOutput } = await execAsync(logCommand, { cwd });
@@ -234,7 +253,7 @@ export class GitHistoryProvider {
                         author,
                         date,
                         message,
-                        changes: statOutput.trim()
+                        changes: statOutput.trim(),
                     });
                 } catch {
                     commits.push({
@@ -242,7 +261,7 @@ export class GitHistoryProvider {
                         fullHash: hash,
                         author,
                         date,
-                        message
+                        message,
                     });
                 }
             }
@@ -252,7 +271,7 @@ export class GitHistoryProvider {
             return {
                 items: commits,
                 hasMore,
-                totalCount
+                totalCount,
             };
         } catch (error) {
             vscode.window.showErrorMessage(`获取文件历史失败: ${error}`);
@@ -290,19 +309,19 @@ export class GitHistoryProvider {
 
                     commits.push({
                         hash: hash.substring(0, 8),
-                        fullHash: hash,  // 保存完整hash
+                        fullHash: hash, // 保存完整hash
                         author,
                         date,
                         message,
-                        changes: statOutput.trim()
+                        changes: statOutput.trim(),
                     });
                 } catch {
                     commits.push({
                         hash: hash.substring(0, 8),
-                        fullHash: hash,  // 保存完整hash
+                        fullHash: hash, // 保存完整hash
                         author,
                         date,
-                        message
+                        message,
                     });
                 }
             }
@@ -317,7 +336,11 @@ export class GitHistoryProvider {
     /**
      * 显示行级别的提交差异
      */
-    async showLineCommitDiff(filePath: string, commitHash: string, lineNumber: number): Promise<void> {
+    async showLineCommitDiff(
+        filePath: string,
+        commitHash: string,
+        lineNumber: number
+    ): Promise<void> {
         try {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
             if (!workspaceFolder) {
@@ -334,40 +357,45 @@ export class GitHistoryProvider {
 
             // 使用 git log -L 获取该行在这个提交中的具体变化
             const lineLogCommand = `git log -L ${lineNumber},${lineNumber}:"${relativePath}" --pretty=format:"" -p ${commitHash}^..${commitHash}`;
-            
+
             try {
                 const { stdout: lineDiff } = await execAsync(lineLogCommand, { cwd });
-                
+
                 if (lineDiff.trim()) {
                     // 创建一个临时文件显示行级别的差异
                     const tempDir = os.tmpdir();
-                    const diffFile = path.join(tempDir, `line_${lineNumber}_diff_${commitHash.substring(0, 8)}.diff`);
-                    
+                    const diffFile = path.join(
+                        tempDir,
+                        `line_${lineNumber}_diff_${commitHash.substring(0, 8)}.diff`
+                    );
+
                     const diffContent = `行 ${lineNumber} 在提交 ${commitInfo.trim()} 中的变化:\n\n${lineDiff}`;
                     await fs.promises.writeFile(diffFile, diffContent, 'utf8');
-                    
+
                     this.tempFiles.push(diffFile);
-                    
+
                     const diffUri = vscode.Uri.file(diffFile);
                     await vscode.window.showTextDocument(diffUri, {
                         preview: false,
-                        viewColumn: vscode.ViewColumn.Active
+                        viewColumn: vscode.ViewColumn.Active,
                     });
-                    
+
                     // 清理临时文件
-                    setTimeout(() => {
-                        this.cleanupTempFile(diffFile);
-                    }, 5 * 60 * 1000); // 5分钟后清理
-                    
+                    setTimeout(
+                        () => {
+                            this.cleanupTempFile(diffFile);
+                        },
+                        5 * 60 * 1000
+                    ); // 5分钟后清理
+
                     return;
                 }
             } catch (error) {
                 console.log('行级别差异获取失败，回退到文件级别差异:', error);
             }
-            
+
             // 如果行级别差异获取失败，回退到显示整个文件的差异
             await this.showCommitDiff(filePath, commitHash);
-            
         } catch (error) {
             console.error('显示行级别差异错误:', error);
             vscode.window.showErrorMessage(`显示行级别差异失败: ${error}`);
@@ -443,8 +471,14 @@ export class GitHistoryProvider {
             const fileExtension = path.extname(relativePath);
             const baseName = path.basename(relativePath, fileExtension);
 
-            const leftTempFile = path.join(tempDir, `${baseName}_${parentHash.substring(0, 8)}${fileExtension}`);
-            const rightTempFile = path.join(tempDir, `${baseName}_${commitHash.substring(0, 8)}${fileExtension}`);
+            const leftTempFile = path.join(
+                tempDir,
+                `${baseName}_${parentHash.substring(0, 8)}${fileExtension}`
+            );
+            const rightTempFile = path.join(
+                tempDir,
+                `${baseName}_${commitHash.substring(0, 8)}${fileExtension}`
+            );
 
             // 写入临时文件
             await fs.promises.writeFile(leftTempFile, leftContent, 'utf8');
@@ -459,23 +493,17 @@ export class GitHistoryProvider {
 
             // 使用VS Code的内置diff功能
             const title = `${commitInfo.trim()} - ${relativePath}`;
-            await vscode.commands.executeCommand(
-                'vscode.diff',
-                leftUri,
-                rightUri,
-                title,
-                {
-                    preview: false,
-                    viewColumn: vscode.ViewColumn.Active
-                }
-            );
+            await vscode.commands.executeCommand('vscode.diff', leftUri, rightUri, title, {
+                preview: false,
+                viewColumn: vscode.ViewColumn.Active,
+            });
 
             // 设置文件为只读
             setTimeout(async () => {
                 try {
                     const leftDoc = await vscode.workspace.openTextDocument(leftUri);
                     const rightDoc = await vscode.workspace.openTextDocument(rightUri);
-                    
+
                     // 监听文档关闭事件来清理临时文件
                     const disposable = vscode.workspace.onDidCloseTextDocument((doc) => {
                         if (doc.uri.fsPath === leftTempFile || doc.uri.fsPath === rightTempFile) {
@@ -484,17 +512,18 @@ export class GitHistoryProvider {
                     });
 
                     // 5分钟后自动清理（防止内存泄漏）
-                    setTimeout(() => {
-                        disposable.dispose();
-                        this.cleanupTempFile(leftTempFile);
-                        this.cleanupTempFile(rightTempFile);
-                    }, 5 * 60 * 1000);
-
+                    setTimeout(
+                        () => {
+                            disposable.dispose();
+                            this.cleanupTempFile(leftTempFile);
+                            this.cleanupTempFile(rightTempFile);
+                        },
+                        5 * 60 * 1000
+                    );
                 } catch (error) {
                     console.error('设置只读模式失败:', error);
                 }
             }, 100);
-
         } catch (error) {
             console.error('显示提交差异错误:', error);
             vscode.window.showErrorMessage(`显示提交差异失败: ${error}`);
@@ -533,42 +562,42 @@ export class GitHistoryProvider {
      */
     private getLanguageIdFromExtension(extension: string): string {
         const languageMap: { [key: string]: string } = {
-            'ts': 'typescript',
-            'js': 'javascript',
-            'tsx': 'typescriptreact',
-            'jsx': 'javascriptreact',
-            'py': 'python',
-            'java': 'java',
-            'cpp': 'cpp',
-            'c': 'c',
-            'cs': 'csharp',
-            'php': 'php',
-            'rb': 'ruby',
-            'go': 'go',
-            'rs': 'rust',
-            'swift': 'swift',
-            'kt': 'kotlin',
-            'scala': 'scala',
-            'html': 'html',
-            'css': 'css',
-            'scss': 'scss',
-            'sass': 'sass',
-            'less': 'less',
-            'json': 'json',
-            'xml': 'xml',
-            'yaml': 'yaml',
-            'yml': 'yaml',
-            'md': 'markdown',
-            'sh': 'shellscript',
-            'bash': 'shellscript',
-            'zsh': 'shellscript',
-            'fish': 'shellscript',
-            'ps1': 'powershell',
-            'sql': 'sql',
-            'dockerfile': 'dockerfile',
-            'makefile': 'makefile',
-            'gitignore': 'ignore',
-            'txt': 'plaintext'
+            ts: 'typescript',
+            js: 'javascript',
+            tsx: 'typescriptreact',
+            jsx: 'javascriptreact',
+            py: 'python',
+            java: 'java',
+            cpp: 'cpp',
+            c: 'c',
+            cs: 'csharp',
+            php: 'php',
+            rb: 'ruby',
+            go: 'go',
+            rs: 'rust',
+            swift: 'swift',
+            kt: 'kotlin',
+            scala: 'scala',
+            html: 'html',
+            css: 'css',
+            scss: 'scss',
+            sass: 'sass',
+            less: 'less',
+            json: 'json',
+            xml: 'xml',
+            yaml: 'yaml',
+            yml: 'yaml',
+            md: 'markdown',
+            sh: 'shellscript',
+            bash: 'shellscript',
+            zsh: 'shellscript',
+            fish: 'shellscript',
+            ps1: 'powershell',
+            sql: 'sql',
+            dockerfile: 'dockerfile',
+            makefile: 'makefile',
+            gitignore: 'ignore',
+            txt: 'plaintext',
         };
 
         return languageMap[extension.toLowerCase()] || 'plaintext';

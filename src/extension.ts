@@ -1,7 +1,11 @@
 import * as vscode from 'vscode';
 import { GitHistoryProvider } from './gitHistoryProvider';
 import { showLineHistory, showFileHistory } from './commands';
-import { LineHistoryTreeProvider, FileHistoryTreeProvider, SmartRefreshManager } from './historyTreeProvider';
+import {
+    LineHistoryTreeProvider,
+    FileHistoryTreeProvider,
+    SmartRefreshManager,
+} from './historyTreeProvider';
 import { GitHistoryStatusBar } from './statusBar';
 
 let gitHistoryProvider: GitHistoryProvider;
@@ -15,12 +19,12 @@ export function activate(context: vscode.ExtensionContext) {
     // 注册侧边栏视图
     const lineTreeView = vscode.window.createTreeView('gitLiner.lineHistoryView', {
         treeDataProvider: lineHistoryTreeProvider,
-        showCollapseAll: false
+        showCollapseAll: false,
     });
 
     const fileTreeView = vscode.window.createTreeView('gitLiner.fileHistoryView', {
         treeDataProvider: fileHistoryTreeProvider,
-        showCollapseAll: false
+        showCollapseAll: false,
     });
 
     // 创建智能刷新管理器
@@ -66,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     const showFileHistoryCommand = vscode.commands.registerCommand(
-        'gitLiner.showFileHistory', 
+        'gitLiner.showFileHistory',
         async () => {
             const result = await showFileHistory(gitHistoryProvider);
             if (result) {
@@ -76,14 +80,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    const refreshCommand = vscode.commands.registerCommand(
-        'gitLiner.refresh',
-        async () => {
-            await smartRefreshManager.smartRefresh();
-            updateLineViewTitle();
-            updateFileViewTitle();
-        }
-    );
+    const refreshCommand = vscode.commands.registerCommand('gitLiner.refresh', async () => {
+        await smartRefreshManager.smartRefresh();
+        updateLineViewTitle();
+        updateFileViewTitle();
+    });
 
     const showCommitDiffCommand = vscode.commands.registerCommand(
         'gitLiner.showCommitDiff',
@@ -113,13 +114,10 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    const focusCommand = vscode.commands.registerCommand(
-        'gitLiner.focus',
-        async () => {
-            // 默认聚焦到文件历史视图
-            await vscode.commands.executeCommand('gitLiner.fileHistoryView.focus');
-        }
-    );
+    const focusCommand = vscode.commands.registerCommand('gitLiner.focus', async () => {
+        // 默认聚焦到文件历史视图
+        await vscode.commands.executeCommand('gitLiner.fileHistoryView.focus');
+    });
 
     const loadMoreLineHistoryCommand = vscode.commands.registerCommand(
         'gitLiner.loadMoreLineHistory',

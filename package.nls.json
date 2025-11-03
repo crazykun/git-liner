@@ -1,0 +1,13 @@
+{
+    "displayName": "Git Liner",
+    "description": "Minimalist Git line history tracking tool, focused on precise code line and file history tracing.",
+    "command.showLineHistory": "Show Line History",
+    "command.showFileHistory": "Show File History",
+    "command.refresh": "Refresh",
+    "command.showCommitDiff": "Show File Diff",
+    "command.copyCommitHash": "Copy Commit Hash",
+    "view.lineHistory": "Line History",
+    "view.fileHistory": "File History",
+    "welcome.lineHistory": "Show Git modification history for the current line\n\n[Show Line History](command:gitLiner.showLineHistory)\n\nOr right-click in the editor to select the corresponding option.",
+    "welcome.fileHistory": "Show Git modification history for the current file\n\n[Show File History](command:gitLiner.showFileHistory)\n\nOr right-click in the editor to select the corresponding option."
+}

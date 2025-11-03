@@ -3,3 +3,9 @@ node_modules
 .vscode/
 .vscode-test/
 *.vsix
+.env
+.DS_Store
+Thumbs.db
+*.log
+coverage/
+.nyc_output/

@@ -161,6 +161,35 @@
         }
       ]
     },
+    "configuration": {
+      "title": "Git Liner",
+      "properties": {
+        "gitLiner.pageSize": {
+          "type": "number",
+          "default": 20,
+          "description": "Number of commits to load per page",
+          "minimum": 5,
+          "maximum": 100
+        },
+        "gitLiner.cacheTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Cache timeout in milliseconds",
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "gitLiner.showStatusBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show Git Liner information in status bar"
+        },
+        "gitLiner.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh history when switching files"
+        }
+      }
+    },
     "keybindings": [
       {
         "command": "gitLiner.showFileHistory",
@@ -179,11 +208,26 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "lint:fix": "eslint src --ext ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "node ./out/test/runTest.js",
+    "pretest": "npm run compile && npm run lint",
+    "package": "vsce package",
+    "publish:vscode": "vsce publish",
+    "publish:openvsx": "ovsx publish"
   },
   "devDependencies": {
-    "@types/vscode": "^1.75.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "16.x",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^8.57.1",
+    "mocha": "^10.8.2",
+    "prettier": "^3.6.2",
     "typescript": "^4.9.4"
   }
 }

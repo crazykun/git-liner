@@ -1,0 +1,13 @@
+{
+    "displayName": "Git Liner",
+    "description": "极简主义的Git行历史追踪工具，专注于精确的代码行和文件历史追溯。",
+    "command.showLineHistory": "显示行修改历史",
+    "command.showFileHistory": "显示文件修改历史",
+    "command.refresh": "刷新",
+    "command.showCommitDiff": "查看文件差异",
+    "command.copyCommitHash": "复制提交Hash",
+    "view.lineHistory": "行历史",
+    "view.fileHistory": "文件历史",
+    "welcome.lineHistory": "显示当前行的Git修改历史\n\n[显示行历史](command:gitLiner.showLineHistory)\n\n或者在编辑器中右键选择相应选项。",
+    "welcome.fileHistory": "显示当前文件的Git修改历史\n\n[显示文件历史](command:gitLiner.showFileHistory)\n\n或者在编辑器中右键选择相应选项。"
+}

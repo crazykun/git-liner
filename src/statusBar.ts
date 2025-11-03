@@ -4,10 +4,7 @@ export class GitHistoryStatusBar {
     private statusBarItem: vscode.StatusBarItem;
 
     constructor() {
-        this.statusBarItem = vscode.window.createStatusBarItem(
-            vscode.StatusBarAlignment.Left,
-            100
-        );
+        this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.statusBarItem.command = 'gitLiner.showFileHistory';
         this.updateStatusBar();
     }

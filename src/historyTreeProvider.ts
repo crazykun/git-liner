@@ -14,7 +14,7 @@ interface CacheEntry {
 
 class HistoryCache {
     private cache = new Map<string, CacheEntry>();
-    private readonly CACHE_DURATION = 30000; // 30秒缓存
+    private readonly cacheDuration = 30000; // 30秒缓存
 
     private getCacheKey(key: CacheKey): string {
         return `${key.type}:${key.filePath}${key.lineNumber ? `:${key.lineNumber}` : ''}`;
@@ -23,13 +23,13 @@ class HistoryCache {
     get(key: CacheKey): GitCommit[] | null {
         const cacheKey = this.getCacheKey(key);
         const entry = this.cache.get(cacheKey);
-        
+
         if (!entry) {
             return null;
         }
 
         // 检查缓存是否过期
-        if (Date.now() - entry.timestamp > this.CACHE_DURATION) {
+        if (Date.now() - entry.timestamp > this.cacheDuration) {
             this.cache.delete(cacheKey);
             return null;
         }
@@ -41,7 +41,7 @@ class HistoryCache {
         const cacheKey = this.getCacheKey(key);
         this.cache.set(cacheKey, {
             commits,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         });
     }
 
@@ -68,11 +68,14 @@ export class LoadMoreTreeItem extends vscode.TreeItem {
         this.tooltip = '点击加载更多历史记录';
         this.iconPath = new vscode.ThemeIcon('refresh');
         this.contextValue = 'loadMore';
-        
+
         this.command = {
-            command: lineNumber !== undefined ? 'gitLiner.loadMoreLineHistory' : 'gitLiner.loadMoreFileHistory',
+            command:
+                lineNumber !== undefined
+                    ? 'gitLiner.loadMoreLineHistory'
+                    : 'gitLiner.loadMoreFileHistory',
             title: '加载更多',
-            arguments: [filePath, lineNumber, currentPage + 1]
+            arguments: [filePath, lineNumber, currentPage + 1],
         };
     }
 }
@@ -84,31 +87,31 @@ export class HistoryTreeItem extends vscode.TreeItem {
         public readonly lineNumber?: number
     ) {
         super(commit.message, vscode.TreeItemCollapsibleState.None);
-        
+
         this.tooltip = `提交: ${commit.hash}\n作者: ${commit.author}\n日期: ${commit.date}\n消息: ${commit.message}${commit.changes ? '\n变更: ' + commit.changes : ''}`;
         this.description = `${commit.hash} • ${commit.author}`;
-        
+
         // 根据是否有行号设置不同的上下文值和图标
         if (this.lineNumber !== undefined) {
             this.contextValue = 'lineCommit';
             this.iconPath = new vscode.ThemeIcon('symbol-line');
             this.tooltip += `\n行号: ${this.lineNumber}`;
-            
+
             // 行级别的差异命令
             this.command = {
                 command: 'gitLiner.showLineCommitDiff',
                 title: '查看行级别差异',
-                arguments: [this.filePath, this.commit.fullHash, this.lineNumber]
+                arguments: [this.filePath, this.commit.fullHash, this.lineNumber],
             };
         } else {
             this.contextValue = 'fileCommit';
             this.iconPath = new vscode.ThemeIcon('git-commit');
-            
+
             // 文件级别的差异命令
             this.command = {
                 command: 'gitLiner.showCommitDiff',
                 title: '查看文件差异',
-                arguments: [this.filePath, this.commit.fullHash]
+                arguments: [this.filePath, this.commit.fullHash],
             };
         }
 
@@ -117,9 +120,15 @@ export class HistoryTreeItem extends vscode.TreeItem {
     }
 }
 
-export class LineHistoryTreeProvider implements vscode.TreeDataProvider<HistoryTreeItem | LoadMoreTreeItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void> = new vscode.EventEmitter<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class LineHistoryTreeProvider
+    implements vscode.TreeDataProvider<HistoryTreeItem | LoadMoreTreeItem>
+{
+    private _onDidChangeTreeData: vscode.EventEmitter<
+        HistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    > = new vscode.EventEmitter<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<
+        HistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    > = this._onDidChangeTreeData.event;
 
     private commits: GitCommit[] = [];
     private currentFilePath?: string;
@@ -139,9 +148,14 @@ export class LineHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
         this.currentLineNumber = lineNumber;
         this.currentPage = 0;
         this.commits = [];
-        
+
         try {
-            const result = await this.gitHistoryProvider.getLineHistoryPaginated(filePath, lineNumber, 0, this.pageSize);
+            const result = await this.gitHistoryProvider.getLineHistoryPaginated(
+                filePath,
+                lineNumber,
+                0,
+                this.pageSize
+            );
             this.commits = result.items;
             this.hasMore = result.hasMore;
             this.refresh();
@@ -158,7 +172,12 @@ export class LineHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
         }
 
         try {
-            const result = await this.gitHistoryProvider.getLineHistoryPaginated(filePath, lineNumber, page, this.pageSize);
+            const result = await this.gitHistoryProvider.getLineHistoryPaginated(
+                filePath,
+                lineNumber,
+                page,
+                this.pageSize
+            );
             this.commits = [...this.commits, ...result.items];
             this.hasMore = result.hasMore;
             this.currentPage = page;
@@ -168,7 +187,11 @@ export class LineHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
         }
     }
 
-    async showLineHistoryFromCache(filePath: string, lineNumber: number, commits: GitCommit[]): Promise<void> {
+    async showLineHistoryFromCache(
+        filePath: string,
+        lineNumber: number,
+        commits: GitCommit[]
+    ): Promise<void> {
         this.currentFilePath = filePath;
         this.currentLineNumber = lineNumber;
         this.commits = commits;
@@ -198,13 +221,15 @@ export class LineHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
             return Promise.resolve([]);
         }
 
-        const items: (HistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map(commit => 
-            new HistoryTreeItem(commit, this.currentFilePath, this.currentLineNumber)
+        const items: (HistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map(
+            (commit) => new HistoryTreeItem(commit, this.currentFilePath, this.currentLineNumber)
         );
 
         // 如果还有更多数据，添加"加载更多"项
         if (this.hasMore && this.currentFilePath && this.currentLineNumber !== undefined) {
-            items.push(new LoadMoreTreeItem(this.currentFilePath, this.currentLineNumber, this.currentPage));
+            items.push(
+                new LoadMoreTreeItem(this.currentFilePath, this.currentLineNumber, this.currentPage)
+            );
         }
 
         return Promise.resolve(items);
@@ -218,14 +243,20 @@ export class LineHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
         return {
             filePath: this.currentFilePath,
             lineNumber: this.currentLineNumber,
-            type: 'line'
+            type: 'line',
         };
     }
 }
 
-export class FileHistoryTreeProvider implements vscode.TreeDataProvider<HistoryTreeItem | LoadMoreTreeItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void> = new vscode.EventEmitter<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class FileHistoryTreeProvider
+    implements vscode.TreeDataProvider<HistoryTreeItem | LoadMoreTreeItem>
+{
+    private _onDidChangeTreeData: vscode.EventEmitter<
+        HistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    > = new vscode.EventEmitter<HistoryTreeItem | LoadMoreTreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<
+        HistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    > = this._onDidChangeTreeData.event;
 
     private commits: GitCommit[] = [];
     private currentFilePath?: string;
@@ -243,9 +274,13 @@ export class FileHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
         this.currentFilePath = filePath;
         this.currentPage = 0;
         this.commits = [];
-        
+
         try {
-            const result = await this.gitHistoryProvider.getFileHistoryPaginated(filePath, 0, this.pageSize);
+            const result = await this.gitHistoryProvider.getFileHistoryPaginated(
+                filePath,
+                0,
+                this.pageSize
+            );
             this.commits = result.items;
             this.hasMore = result.hasMore;
             this.refresh();
@@ -262,7 +297,11 @@ export class FileHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
         }
 
         try {
-            const result = await this.gitHistoryProvider.getFileHistoryPaginated(filePath, page, this.pageSize);
+            const result = await this.gitHistoryProvider.getFileHistoryPaginated(
+                filePath,
+                page,
+                this.pageSize
+            );
             this.commits = [...this.commits, ...result.items];
             this.hasMore = result.hasMore;
             this.currentPage = page;
@@ -298,8 +337,8 @@ export class FileHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
             return Promise.resolve([]);
         }
 
-        const items: (HistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map(commit => 
-            new HistoryTreeItem(commit, this.currentFilePath)
+        const items: (HistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map(
+            (commit) => new HistoryTreeItem(commit, this.currentFilePath)
         );
 
         // 如果还有更多数据，添加"加载更多"项
@@ -317,7 +356,7 @@ export class FileHistoryTreeProvider implements vscode.TreeDataProvider<HistoryT
     getCurrentInfo(): { filePath?: string; type: string } {
         return {
             filePath: this.currentFilePath,
-            type: 'file'
+            type: 'file',
         };
     }
 }
@@ -389,7 +428,7 @@ export class SmartRefreshManager {
         this.lastRefreshContext = {
             filePath,
             lineNumber: shouldRefreshLine ? lineNumber : undefined,
-            type: shouldRefreshLine ? 'line' : 'file'
+            type: shouldRefreshLine ? 'line' : 'file',
         };
     }
 
@@ -400,8 +439,10 @@ export class SmartRefreshManager {
         }
 
         // 如果上次刷新的是行历史，且是同一个文件
-        if (this.lastRefreshContext?.type === 'line' && 
-            this.lastRefreshContext.filePath === filePath) {
+        if (
+            this.lastRefreshContext?.type === 'line' &&
+            this.lastRefreshContext.filePath === filePath
+        ) {
             return true;
         }
 
@@ -421,8 +462,10 @@ export class SmartRefreshManager {
         }
 
         // 如果上次刷新的是文件历史，且是同一个文件
-        if (this.lastRefreshContext?.type === 'file' && 
-            this.lastRefreshContext.filePath === filePath) {
+        if (
+            this.lastRefreshContext?.type === 'file' &&
+            this.lastRefreshContext.filePath === filePath
+        ) {
             return true;
         }
 
