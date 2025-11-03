@@ -84,8 +84,44 @@ Open VSX搜索 "Git Liner" 或访问：[Open VSX Registry](https://open-vsx.org/
 
 ## 📦 开发者指南
 
+### 快速开始
+```bash
+# 初始化开发环境（安装依赖、编译代码）
+./start.sh setup
 
-### 打包与发布
+# 打包插件
+./start.sh package
+
+# 安装到本地VSCode测试
+./start.sh install
+
+# 发布到VSCode Marketplace
+export VSCE_PAT="your-vscode-token"
+./start.sh publish-vsc
+
+# 发布到Open VSX Registry
+export OVSX_PAT="your-ovsx-token"
+./start.sh publish
+
+# 发布到所有平台
+./start.sh publish-all
+```
+
+### 开发工具脚本
+我们提供了统一的开发工具脚本 `start.sh`，整合了所有开发、打包、安装和发布功能：
+
+| 命令 | 功能 | 说明 |
+|------|------|------|
+| `./start.sh setup` | 开发环境初始化 | 安装依赖、编译代码 |
+| `./start.sh package` | 打包插件 | 生成.vsix文件 |
+| `./start.sh install` | 安装插件 | 安装到本地VSCode |
+| `./start.sh publish` | 发布到Open VSX | 发布到Open VSX Registry |
+| `./start.sh publish-vsc` | 发布到VSCode | 发布到VSCode Marketplace |
+| `./start.sh publish-all` | 发布到所有平台 | 同时发布到两个平台 |
+| `./start.sh clean` | 清理文件 | 清理构建文件和缓存 |
+| `./start.sh help` | 帮助信息 | 显示所有可用命令 |
+
+### 传统方式（仍然支持）
 ```bash
 # 1. 编译代码
 npm run compile
@@ -96,27 +132,8 @@ vsce package
 # 3. 发布到VSCode插件市场
 vsce publish
 
-# 4. 发布指定版本
-vsce publish 1.0.3
-
-# 5. 发布预发布版本
-vsce publish --pre-release
-```
-
-### 发布open-vsx
-
-```bash
-# 查看打包内容
-vsce ls
-
-# 显示插件信息
-vsce show crazykun.git-liner
-
-# 登录发布账户
-vsce login crazykun
-
-# 生成个人访问令牌后登录
-vsce login <publisher-name>
+# 4. 发布到Open VSX Registry
+ovsx publish git-liner-x.x.x.vsix
 ```
 
 ### 版本管理
