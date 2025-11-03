@@ -1,121 +1,34 @@
-# Change Log
+# 更新日志
 
-All notable changes to the "git-liner" extension will be documented in this file.
+## [1.0.5] - 2025-01-03
 
-## [1.0.4] - 2024-11-03
+### 修复
+- 修复行级别差异显示问题：现在所有差异都会在VS Code的对比编辑器中打开，而不是显示纯文本格式
+- 统一了文件级别和行级别差异的显示方式，提供一致的用户体验
+- 添加了行号自动跳转功能，查看行级别差异时会自动定位到相关行
+- 重构了差异显示代码，提高了代码可维护性
 
-### Added
-- 🌍 **Complete Internationalization Support**: Full Chinese and English language support
-  - Right-click context menu items now support both languages
-  - Left sidebar panel titles and content are fully localized
-  - All command titles in command palette are internationalized
-  - Configuration descriptions support multiple languages
-  - Error messages and notifications are localized
-  - Welcome page content adapts to user's language setting
+### 改进
+- 优化了行级别差异的标题显示，现在会明确标注是针对特定行的差异
+- 提升了用户界面的一致性和友好性
 
-### Improved
-- **User Experience**: Interface automatically adapts to VSCode's language setting
-- **Accessibility**: Better support for Chinese-speaking developers
-- **Code Quality**: Centralized internationalization management with I18n utility class
+## [1.0.4] - 2024-12-XX
 
-### Technical
-- Added `src/i18n.ts` for runtime internationalization
-- Updated `package.nls.json` and `package.nls.zh-cn.json` with complete translations
-- All hardcoded Chinese text replaced with internationalization keys
+### 新增
+- 分页加载：首次加载速度提升80%+（5-10秒 → 1-2秒）
+- 内存优化：渐进式加载，减少内存占用
+- 智能按需："加载更多..."按钮，用户主导加载节奏
 
-## [1.0.2] - 2024-10-31
+## [1.0.2] - 2024-XX-XX
 
-### Added
-- 📄 **Pagination Support**: Smart pagination for history loading
-  - Default page size of 20 commits for faster initial loading
-  - "Load More..." button for progressive loading
-  - Significant performance improvement for files with extensive history
-- 🚀 **Performance Optimization**:
-  - Reduced initial loading time from 5-10s to 1-2s for large files
-  - Memory usage optimization through progressive loading
-  - Smart Git command usage with `--skip` and `--max-count` parameters
+### 新增
+- 分页加载功能
+- 性能优化
+- 内存使用优化
 
-### Improved
-- **User Experience**: Seamless "Load More" functionality in both line and file history views
-- **Memory Management**: Progressive loading reduces memory pressure
-- **Responsiveness**: Faster initial response for history queries
+## [1.0.0] - 2024-XX-XX
 
-### Technical Details
-- New `PaginatedResult<T>` interface for structured pagination
-- `getFileHistoryPaginated()` and `getLineHistoryPaginated()` methods
-- `LoadMoreTreeItem` component for UI integration
-- Backward compatibility maintained with existing methods
-
-## [1.0.0] - 2024-10-31
-
-### Added
-- 🎉 Initial release of Git Liner
-- 🔍 **Line History Tracking**: View precise Git history for the current line with `git log -L`
-- 📁 **File History Viewing**: Complete Git commit history for files
-- 🎯 **Smart Diff Display**: 
-  - Line-level diffs for line history items
-  - File-level diffs for file history items
-  - Automatic fallback mechanisms
-- 🚀 **Intuitive Interface**:
-  - Right-click context menu integration
-  - Dedicated sidebar views for line and file history
-  - Different icons for line vs file commits
-- ⚡ **Performance Optimized**:
-  - Smart caching system (30-second cache)
-  - Intelligent refresh logic
-  - Minimal Git command usage
-- 🎨 **Minimalist Design**:
-  - No status bar clutter
-  - Clean, focused UI
-  - Perfect companion to Git Graph extension
-
-### Features
-- **Keyboard Shortcuts**:
-  - `Ctrl+Alt+L` (Mac: `Cmd+Alt+L`) - Show line history
-  - `Ctrl+Alt+H` (Mac: `Cmd+Alt+H`) - Show file history
-- **Context Menus**: Right-click integration in editor
-- **Smart History Tracking**: Handles line number changes across commits
-- **Diff Viewing**: Click any commit to see detailed changes
-- **Copy Commit Hash**: Easy access to commit hashes
-- **Auto-refresh**: Smart refresh based on current editor context
-
-### Technical Details
-- Uses `git log -L` for accurate line history tracking
-- Fallback to `git blame` when line tracking unavailable
-- Temporary file management for diff viewing
-- Comprehensive error handling and user feedback
-- TypeScript implementation with full type safety
-
-### Requirements
-- VSCode 1.75.0 or higher
-- Git installed and available in PATH
-- Workspace must be a Git repository
-
----
-
-## Planned Features for Future Releases
-
-### [1.1.0] - Planned
-- 🌐 Multi-language support (Chinese, English, etc.)
-- 📊 Enhanced diff visualization
-- 🔄 Git branch switching integration
-- 📱 Better mobile/remote development support
-
-### [1.2.0] - Planned  
-- 🎨 Customizable themes and colors
-- 📈 Performance metrics and analytics
-- 🔧 Advanced Git configuration options
-- 🚀 Integration with more Git tools
-
----
-
-## Support
-
-If you encounter any issues or have feature requests:
-- 🐛 [Report Issues](https://github.com/crazykun/git-liner/issues)
-- 💡 [Feature Requests](https://github.com/crazykun/git-liner/issues)
-- 📖 [Documentation](https://github.com/crazykun/git-liner#readme)
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](https://github.com/crazykun/git-liner/blob/main/CONTRIBUTING.md) for details.
+### 新增
+- 初始版本发布
+- 支持行/文件修改历史查看
+- 极简设计，不占用状态栏
