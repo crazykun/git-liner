@@ -59,18 +59,14 @@
 
 ### 安装方式
 
-#### 方式一：VSCode 插件市场（推荐）
-1. 打开 VSCode
-2. 按 `Ctrl+Shift+X` 打开插件市场
-3. 搜索 "Git Liner"
-4. 点击安装
+#### 方式一：插件市场（推荐）
+1. VSCode 插件市场
+搜索 "Git Liner" 或访问：[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner)
 
-#### 方式二：命令行安装
-```bash
-code --install-extension crazykun.git-liner
-```
+2.VSCodium / Eclipse Theia / Gitpod / Kiro / Trae / Qoder
+Open VSX搜索 "Git Liner" 或访问：[Open VSX Registry](https://open-vsx.org/extension/crazykun/git-liner)
 
-#### 方式三：离线安装
+#### 方式二：离线安装
 1. 从 [Releases](https://github.com/crazykun/git-liner/releases) 下载 `.vsix` 文件
 2. VSCode 中按 `Ctrl+Shift+P`
 3. 输入 "Extensions: Install from VSIX"
