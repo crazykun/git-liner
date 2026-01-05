@@ -63,7 +63,7 @@
 1. VSCode 插件市场
 搜索 "Git Liner" 或访问：[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=crazykun.git-liner)
 
-2.VSCodium / Eclipse Theia / Gitpod / Kiro / Trae / Qoder
+2. VSCodium / Eclipse Theia / Gitpod / Kiro / Trae / Qoder
 Open VSX搜索 "Git Liner" 或访问：[Open VSX Registry](https://open-vsx.org/extension/crazykun/git-liner)
 
 #### 方式二：离线安装
