@@ -6,6 +6,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
 import { GitHistoryProvider } from '../../gitHistoryProvider';
+import { ProjectHistoryTreeProvider, LoadMoreTreeItem } from '../../historyTreeProvider';
 
 const execFileAsync = promisify(execFile);
 
@@ -163,6 +164,76 @@ suite('Git Liner Extension Tests', () => {
                 [headHash.trim()],
                 'Should list local-only commits in HEAD->upstream order'
             );
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
+    test('ProjectHistoryTreeProvider marks unpushed HEAD only when ahead', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-projview-'));
+
+        try {
+            await execFileAsync('git', ['init', '--initial-branch=main'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'a.txt'), 'a\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'initial'], { cwd: repoRoot });
+
+            const gitProvider = new GitHistoryProvider();
+            const treeProvider = new ProjectHistoryTreeProvider(gitProvider);
+
+            await treeProvider.showProjectHistory(repoRoot);
+            const noAheadChildren = await Promise.resolve(treeProvider.getChildren());
+            assert.strictEqual(noAheadChildren.length, 1, 'Should show single commit');
+            assert.strictEqual(noAheadChildren[0].contextValue, 'projectCommit', 'No ahead => projectCommit');
+
+            const { stdout: initialHash } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
+            await execFileAsync('git', ['remote', 'add', 'origin', repoRoot], { cwd: repoRoot });
+            await execFileAsync('git', ['update-ref', 'refs/remotes/origin/main', initialHash.trim()], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'branch.main.remote', 'origin'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'branch.main.merge', 'refs/heads/main'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'b.txt'), 'b\n', 'utf8');
+            await execFileAsync('git', ['add', 'b.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'unpushed'], { cwd: repoRoot });
+
+            await treeProvider.showProjectHistory(repoRoot);
+            const aheadChildren = await Promise.resolve(treeProvider.getChildren());
+            assert.strictEqual(aheadChildren.length, 2, 'Should list two commits');
+            assert.strictEqual(aheadChildren[0].contextValue, 'projectCommitUnpushedHead', 'Top commit gated for ops');
+            assert.strictEqual(aheadChildren[1].contextValue, 'projectCommit', 'Older commits stay projectCommit');
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
+    test('ProjectHistoryTreeProvider appends LoadMore when more pages exist', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-projview-more-'));
+
+        try {
+            await execFileAsync('git', ['init'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+            for (let i = 1; i <= 22; i++) {
+                await fs.promises.writeFile(path.join(repoRoot, `f${i}.txt`), `${i}\n`, 'utf8');
+                await execFileAsync('git', ['add', `f${i}.txt`], { cwd: repoRoot });
+                await execFileAsync('git', ['commit', '-m', `c${i}`], { cwd: repoRoot });
+            }
+
+            const gitProvider = new GitHistoryProvider();
+            const treeProvider = new ProjectHistoryTreeProvider(gitProvider);
+
+            await treeProvider.showProjectHistory(repoRoot);
+            const firstPage = await Promise.resolve(treeProvider.getChildren());
+            assert.strictEqual(firstPage.length, 21, 'Page 1 = 20 commits + LoadMore');
+            assert.ok(firstPage[firstPage.length - 1] instanceof LoadMoreTreeItem, 'Last item should be LoadMore');
+
+            await treeProvider.loadMoreProjectHistory(repoRoot, 1);
+            const afterMore = await Promise.resolve(treeProvider.getChildren());
+            assert.strictEqual(afterMore.length, 22, 'After loading more, all 22 commits shown');
+            assert.ok(!(afterMore[afterMore.length - 1] instanceof LoadMoreTreeItem), 'No LoadMore left');
         } finally {
             await fs.promises.rm(repoRoot, { recursive: true, force: true });
         }

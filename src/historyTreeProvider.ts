@@ -63,20 +63,28 @@ export class LoadMoreTreeItem extends vscode.TreeItem {
     constructor(
         public readonly filePath: string,
         public readonly lineNumber?: number,
-        public readonly currentPage: number = 0
+        public readonly currentPage: number = 0,
+        commandOverride?: string
     ) {
         super('加载更多...', vscode.TreeItemCollapsibleState.None);
         this.tooltip = '点击加载更多历史记录';
         this.iconPath = new vscode.ThemeIcon('refresh');
         this.contextValue = 'loadMore';
 
+        const command =
+            commandOverride ??
+            (lineNumber !== undefined
+                ? 'gitLiner.loadMoreLineHistory'
+                : 'gitLiner.loadMoreFileHistory');
+        const args =
+            commandOverride === 'gitLiner.loadMoreProjectHistory'
+                ? [filePath, currentPage + 1]
+                : [filePath, lineNumber, currentPage + 1];
+
         this.command = {
-            command:
-                lineNumber !== undefined
-                    ? 'gitLiner.loadMoreLineHistory'
-                    : 'gitLiner.loadMoreFileHistory',
+            command,
             title: '加载更多',
-            arguments: [filePath, lineNumber, currentPage + 1],
+            arguments: args,
         };
     }
 }
@@ -528,3 +536,140 @@ export class SmartRefreshManager {
 
 // 保持向后兼容的别名
 export class HistoryTreeProvider extends FileHistoryTreeProvider {}
+
+export class ProjectHistoryTreeItem extends vscode.TreeItem {
+    constructor(
+        public readonly commit: GitCommit,
+        public readonly repoRoot: string,
+        public readonly isUnpushedHead: boolean
+    ) {
+        super(commit.message, vscode.TreeItemCollapsibleState.None);
+        this.tooltip = `提交: ${commit.hash}\n作者: ${commit.author}\n日期: ${commit.date}\n消息: ${commit.message}`;
+        this.description = `${commit.hash} • ${commit.author}`;
+        this.contextValue = isUnpushedHead ? 'projectCommitUnpushedHead' : 'projectCommit';
+        this.iconPath = new vscode.ThemeIcon(isUnpushedHead ? 'cloud-upload' : 'git-commit');
+        this.resourceUri = vscode.Uri.parse(`git-history-project:${commit.hash}`);
+    }
+}
+
+export class ProjectHistoryTreeProvider
+    implements vscode.TreeDataProvider<ProjectHistoryTreeItem | LoadMoreTreeItem>
+{
+    private _onDidChangeTreeData: vscode.EventEmitter<
+        ProjectHistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    > = new vscode.EventEmitter<
+        ProjectHistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    >();
+    readonly onDidChangeTreeData: vscode.Event<
+        ProjectHistoryTreeItem | LoadMoreTreeItem | undefined | null | void
+    > = this._onDidChangeTreeData.event;
+
+    private commits: GitCommit[] = [];
+    private currentRepoRoot?: string;
+    private hasMore: boolean = false;
+    private currentPage: number = 0;
+    private readonly pageSize: number = 20;
+    private upstreamHeadHash: string | null = null;
+    private loadToken: number = 0;
+
+    constructor(private gitHistoryProvider: GitHistoryProvider) {}
+
+    refresh(): void {
+        this._onDidChangeTreeData.fire();
+    }
+
+    getCurrentRepoRoot(): string | undefined {
+        return this.currentRepoRoot;
+    }
+
+    async showProjectHistory(repoRoot: string): Promise<void> {
+        const token = ++this.loadToken;
+        this.currentRepoRoot = repoRoot;
+        this.currentPage = 0;
+        this.commits = [];
+        this.hasMore = false;
+        this.upstreamHeadHash = null;
+
+        try {
+            const [historyResult, upstreamStatus] = await Promise.all([
+                this.gitHistoryProvider.getProjectHistoryPaginated(repoRoot, 0, this.pageSize),
+                this.gitHistoryProvider.getUpstreamStatus(repoRoot),
+            ]);
+
+            if (token !== this.loadToken) {
+                return;
+            }
+
+            this.commits = historyResult.items;
+            this.hasMore = historyResult.hasMore;
+            this.upstreamHeadHash = upstreamStatus.aheadHashes[0] ?? null;
+            this.refresh();
+        } catch (error) {
+            if (token === this.loadToken) {
+                vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
+            }
+        }
+    }
+
+    async loadMoreProjectHistory(repoRoot: string, page: number): Promise<void> {
+        if (repoRoot !== this.currentRepoRoot) {
+            await this.showProjectHistory(repoRoot);
+            return;
+        }
+
+        const token = ++this.loadToken;
+        try {
+            const result = await this.gitHistoryProvider.getProjectHistoryPaginated(
+                repoRoot,
+                page,
+                this.pageSize
+            );
+
+            if (token !== this.loadToken) {
+                return;
+            }
+
+            this.commits = [...this.commits, ...result.items];
+            this.hasMore = result.hasMore;
+            this.currentPage = page;
+            this.refresh();
+        } catch (error) {
+            if (token === this.loadToken) {
+                vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
+            }
+        }
+    }
+
+    getTreeItem(element: ProjectHistoryTreeItem | LoadMoreTreeItem): vscode.TreeItem {
+        return element;
+    }
+
+    getChildren(): Thenable<(ProjectHistoryTreeItem | LoadMoreTreeItem)[]> {
+        if (!this.currentRepoRoot || this.commits.length === 0) {
+            return Promise.resolve([]);
+        }
+
+        const items: (ProjectHistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map((commit) => {
+            const isUnpushedHead =
+                this.upstreamHeadHash !== null && commit.fullHash === this.upstreamHeadHash;
+            return new ProjectHistoryTreeItem(commit, this.currentRepoRoot!, isUnpushedHead);
+        });
+
+        if (this.hasMore) {
+            items.push(
+                new LoadMoreTreeItem(
+                    this.currentRepoRoot,
+                    undefined,
+                    this.currentPage,
+                    'gitLiner.loadMoreProjectHistory'
+                )
+            );
+        }
+
+        return Promise.resolve(items);
+    }
+
+    getParent(): vscode.ProviderResult<ProjectHistoryTreeItem | LoadMoreTreeItem> {
+        return null;
+    }
+}
