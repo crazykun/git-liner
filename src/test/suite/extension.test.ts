@@ -93,6 +93,39 @@ suite('Git Liner Extension Tests', () => {
         }
     });
 
+    test('Project history paginates commits from repo root', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-project-'));
+
+        try {
+            await execFileAsync('git', ['init'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+
+            for (let i = 1; i <= 25; i++) {
+                const filePath = path.join(repoRoot, `file-${i}.txt`);
+                await fs.promises.writeFile(filePath, `version ${i}\n`, 'utf8');
+                await execFileAsync('git', ['add', `file-${i}.txt`], { cwd: repoRoot });
+                await execFileAsync('git', ['commit', '-m', `commit ${i}`], { cwd: repoRoot });
+            }
+
+            const provider = new GitHistoryProvider();
+            const firstPage = await provider.getProjectHistoryPaginated(repoRoot, 0, 20);
+            const secondPage = await provider.getProjectHistoryPaginated(repoRoot, 1, 20);
+
+            assert.strictEqual(firstPage.items.length, 20, 'First page should contain pageSize commits');
+            assert.strictEqual(firstPage.hasMore, true, 'First page should have more commits');
+            assert.strictEqual(firstPage.totalCount, 25, 'Should report total commit count');
+            assert.strictEqual(firstPage.items[0].message, 'commit 25', 'Latest commit should be first');
+
+            assert.strictEqual(secondPage.items.length, 5, 'Second page should contain remaining commits');
+            assert.strictEqual(secondPage.hasMore, false, 'Second page should not have more commits');
+            assert.strictEqual(secondPage.items[secondPage.items.length - 1].message, 'commit 1', 'Oldest commit last');
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
     test('Extension is loaded', () => {
         const extension = vscode.extensions.getExtension('crazykun.git-liner');
         assert.ok(extension, 'Extension should be loaded');

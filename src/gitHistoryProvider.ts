@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,6 +7,7 @@ import * as os from 'os';
 import { I18n } from './i18n';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export interface GitCommit {
     hash: string;
@@ -30,6 +31,62 @@ interface GitContext {
 
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
+
+    async getProjectHistoryPaginated(
+        cwd: string,
+        page: number = 0,
+        pageSize: number = 20
+    ): Promise<PaginatedResult<GitCommit>> {
+        try {
+            const repoRoot = await this.resolveRepoRoot(cwd);
+            const { stdout: countOutput } = await execFileAsync('git', ['rev-list', '--count', 'HEAD'], { cwd: repoRoot });
+            const totalCount = parseInt(countOutput.trim(), 10) || 0;
+
+            const skip = page * pageSize;
+            const { stdout: logOutput } = await execFileAsync(
+                'git',
+                [
+                    'log',
+                    '--pretty=format:%H|%an|%ad|%s',
+                    '--date=short',
+                    `--skip=${skip}`,
+                    `--max-count=${pageSize}`,
+                ],
+                { cwd: repoRoot }
+            );
+
+            const commits: GitCommit[] = [];
+            const lines = logOutput.split('\n').filter((line: string) => line.trim());
+            for (const line of lines) {
+                const [hash, author, date, ...messageParts] = line.split('|');
+                if (!hash) {
+                    continue;
+                }
+                commits.push({
+                    hash: hash.substring(0, 8),
+                    fullHash: hash,
+                    author,
+                    date,
+                    message: messageParts.join('|'),
+                });
+            }
+
+            return {
+                items: commits,
+                hasMore: skip + commits.length < totalCount,
+                totalCount,
+            };
+        } catch (error) {
+            vscode.window.showErrorMessage(I18n.t('error.failedToLoadHistory', error));
+            return { items: [], hasMore: false, totalCount: 0 };
+        }
+    }
+
+    private async resolveRepoRoot(cwd: string): Promise<string> {
+        const probeCwd = fs.existsSync(cwd) ? cwd : process.cwd();
+        const { stdout } = await execFileAsync('git', ['rev-parse', '--show-toplevel'], { cwd: probeCwd });
+        return stdout.trim();
+    }
 
     private async getGitContext(
         filePath: string,
