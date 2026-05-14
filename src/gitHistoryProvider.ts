@@ -32,6 +32,18 @@ interface GitContext {
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
 
+    async softResetToUpstream(cwd: string): Promise<void> {
+        const repoRoot = await this.resolveRepoRoot(cwd);
+        const status = await this.getUpstreamStatus(repoRoot);
+        if (!status.upstream) {
+            throw new Error('No upstream configured for current branch');
+        }
+        if (status.aheadHashes.length === 0) {
+            throw new Error('No local commits ahead of upstream');
+        }
+        await execFileAsync('git', ['reset', '--soft', status.upstream], { cwd: repoRoot });
+    }
+
     async amendCommitMessage(cwd: string, newMessage: string): Promise<void> {
         if (!newMessage || !newMessage.trim()) {
             throw new Error('Commit message cannot be empty');

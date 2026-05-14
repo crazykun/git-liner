@@ -290,6 +290,64 @@ suite('Git Liner Extension Tests', () => {
         }
     });
 
+    test('softResetToUpstream moves HEAD to upstream and keeps changes', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-soft-'));
+
+        try {
+            await execFileAsync('git', ['init', '--initial-branch=main'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'a.txt'), 'a\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'A'], { cwd: repoRoot });
+            const { stdout: hashA } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
+
+            await execFileAsync('git', ['remote', 'add', 'origin', repoRoot], { cwd: repoRoot });
+            await execFileAsync('git', ['update-ref', 'refs/remotes/origin/main', hashA.trim()], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'branch.main.remote', 'origin'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'branch.main.merge', 'refs/heads/main'], { cwd: repoRoot });
+
+            await fs.promises.writeFile(path.join(repoRoot, 'b.txt'), 'b\n', 'utf8');
+            await execFileAsync('git', ['add', 'b.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'B'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'c.txt'), 'c\n', 'utf8');
+            await execFileAsync('git', ['add', 'c.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'C'], { cwd: repoRoot });
+
+            const provider = new GitHistoryProvider();
+            await provider.softResetToUpstream(repoRoot);
+
+            const { stdout: headAfter } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
+            assert.strictEqual(headAfter.trim(), hashA.trim(), 'HEAD should be back at upstream');
+
+            const { stdout: status } = await execFileAsync('git', ['status', '--porcelain'], { cwd: repoRoot });
+            assert.match(status, /b\.txt/, 'b.txt should remain staged');
+            assert.match(status, /c\.txt/, 'c.txt should remain staged');
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
+    test('softResetToUpstream rejects when no upstream configured', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-soft-no-up-'));
+
+        try {
+            await execFileAsync('git', ['init'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'a.txt'), 'a\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'A'], { cwd: repoRoot });
+
+            const provider = new GitHistoryProvider();
+            await assert.rejects(provider.softResetToUpstream(repoRoot), /upstream/i);
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
     test('Extension is loaded', () => {
         const extension = vscode.extensions.getExtension('crazykun.git-liner');
         assert.ok(extension, 'Extension should be loaded');
