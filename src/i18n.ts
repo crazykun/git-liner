@@ -29,6 +29,16 @@ export class I18n {
                 'noHistoryFound': '未找到历史记录',
                 'error.failedToLoadHistory': '加载历史记录失败: {0}',
                 'error.failedToShowDiff': '显示差异失败: {0}',
+                'projectHistory.title': '项目历史',
+                'amend.prompt': '请输入新的 commit 信息',
+                'amend.empty': 'Commit 信息不能为空',
+                'amend.staged': '存在已暂存的改动，无法直接修改 commit 信息，请先 commit 或 unstage',
+                'amend.success': '已修改 commit 信息',
+                'softReset.confirm': '将本地未推送的 {1} 个提交回退到 {0}，已修改的内容会保留在暂存区，是否继续？',
+                'softReset.confirmAction': '确认回退',
+                'softReset.success': '已回退到 {0}',
+                'error.noUpstream': '当前分支没有 upstream',
+                'error.notUnpushedHead': '最新提交不再是未推送的 HEAD，请刷新视图',
             };
         } else {
             this.messages = {
@@ -45,6 +55,16 @@ export class I18n {
                 'noHistoryFound': 'No history found',
                 'error.failedToLoadHistory': 'Failed to load history: {0}',
                 'error.failedToShowDiff': 'Failed to show diff: {0}',
+                'projectHistory.title': 'Project History',
+                'amend.prompt': 'Enter new commit message',
+                'amend.empty': 'Commit message cannot be empty',
+                'amend.staged': 'There are staged changes; cannot amend message safely. Commit or unstage first.',
+                'amend.success': 'Commit message updated',
+                'softReset.confirm': 'Soft reset {1} unpushed commit(s) to {0}? Working changes will stay staged.',
+                'softReset.confirmAction': 'Reset',
+                'softReset.success': 'Reset to {0}',
+                'error.noUpstream': 'Current branch has no upstream',
+                'error.notUnpushedHead': 'Latest commit is no longer the unpushed HEAD, please refresh',
             };
         }
     }

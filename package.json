@@ -51,6 +51,11 @@
           "id": "gitLiner.fileHistoryView",
           "name": "%view.fileHistory%",
           "when": "gitOpenRepositoryCount != 0"
+        },
+        {
+          "id": "gitLiner.projectHistoryView",
+          "name": "%view.projectHistory%",
+          "when": "gitOpenRepositoryCount != 0"
         }
       ]
     },
@@ -63,6 +68,11 @@
       {
         "view": "gitLiner.fileHistoryView",
         "contents": "%welcome.fileHistory%",
+        "when": "gitOpenRepositoryCount != 0"
+      },
+      {
+        "view": "gitLiner.projectHistoryView",
+        "contents": "%welcome.projectHistory%",
         "when": "gitOpenRepositoryCount != 0"
       }
     ],
@@ -121,6 +131,27 @@
         "command": "gitLiner.loadMoreFileHistory",
         "title": "%command.loadMoreFileHistory%",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "gitLiner.showProjectHistory",
+        "title": "%command.showProjectHistory%",
+        "category": "Git Liner",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitLiner.loadMoreProjectHistory",
+        "title": "%command.loadMoreProjectHistory%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitLiner.amendLatestCommitMessage",
+        "title": "%command.amendLatestCommitMessage%",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "gitLiner.softResetLatestToUpstream",
+        "title": "%command.softResetLatestToUpstream%",
+        "icon": "$(discard)"
       }
     ],
     "menus": {
@@ -139,7 +170,7 @@
       "view/title": [
         {
           "command": "gitLiner.refresh",
-          "when": "view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView",
+          "when": "view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView || view == gitLiner.projectHistoryView",
           "group": "navigation"
         }
       ],
@@ -156,8 +187,18 @@
         },
         {
           "command": "gitLiner.copyCommitHash",
-          "when": "(view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit)",
+          "when": "(view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView || view == gitLiner.projectHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit || viewItem == projectCommit || viewItem == projectCommitUnpushedHead)",
           "group": "inline"
+        },
+        {
+          "command": "gitLiner.amendLatestCommitMessage",
+          "when": "view == gitLiner.projectHistoryView && viewItem == projectCommitUnpushedHead",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "gitLiner.softResetLatestToUpstream",
+          "when": "view == gitLiner.projectHistoryView && viewItem == projectCommitUnpushedHead",
+          "group": "1_modify@2"
         }
       ]
     },

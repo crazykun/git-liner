@@ -1,9 +1,16 @@
 import * as vscode from 'vscode';
 import { GitHistoryProvider } from './gitHistoryProvider';
-import { showLineHistory, showFileHistory } from './commands';
+import {
+    showLineHistory,
+    showFileHistory,
+    showProjectHistory,
+    amendLatestCommitMessage,
+    softResetLatestToUpstream,
+} from './commands';
 import {
     LineHistoryTreeProvider,
     FileHistoryTreeProvider,
+    ProjectHistoryTreeProvider,
     SmartRefreshManager,
 } from './historyTreeProvider';
 import { GitHistoryStatusBar } from './statusBar';
@@ -18,6 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
     gitHistoryProvider = new GitHistoryProvider();
     const lineHistoryTreeProvider = new LineHistoryTreeProvider(gitHistoryProvider);
     const fileHistoryTreeProvider = new FileHistoryTreeProvider(gitHistoryProvider);
+    const projectHistoryTreeProvider = new ProjectHistoryTreeProvider(gitHistoryProvider);
     const statusBar = new GitHistoryStatusBar();
 
     // 注册侧边栏视图
@@ -28,6 +36,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     const fileTreeView = vscode.window.createTreeView('gitLiner.fileHistoryView', {
         treeDataProvider: fileHistoryTreeProvider,
+        showCollapseAll: false,
+    });
+
+    const projectTreeView = vscode.window.createTreeView('gitLiner.projectHistoryView', {
+        treeDataProvider: projectHistoryTreeProvider,
         showCollapseAll: false,
     });
 
@@ -61,6 +74,16 @@ export function activate(context: vscode.ExtensionContext) {
         }
     };
 
+    const updateProjectViewTitle = () => {
+        const repoRoot = projectHistoryTreeProvider.getCurrentRepoRoot();
+        if (repoRoot) {
+            const folderName = vscode.workspace.asRelativePath(repoRoot) || repoRoot;
+            projectTreeView.title = `${I18n.t('projectHistory.title')}: ${folderName}`;
+        } else {
+            projectTreeView.title = I18n.t('projectHistory.title');
+        }
+    };
+
     // 注册命令
     const showLineHistoryCommand = vscode.commands.registerCommand(
         'gitLiner.showLineHistory',
@@ -85,10 +108,60 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     const refreshCommand = vscode.commands.registerCommand('gitLiner.refresh', async () => {
+        if (projectTreeView.visible) {
+            const repoRoot = projectHistoryTreeProvider.getCurrentRepoRoot();
+            if (repoRoot) {
+                await projectHistoryTreeProvider.showProjectHistory(repoRoot);
+                updateProjectViewTitle();
+                return;
+            }
+        }
         await smartRefreshManager.smartRefresh();
         updateLineViewTitle();
         updateFileViewTitle();
     });
+
+    const showProjectHistoryCommand = vscode.commands.registerCommand(
+        'gitLiner.showProjectHistory',
+        async () => {
+            const result = await showProjectHistory(gitHistoryProvider);
+            if (result) {
+                await projectHistoryTreeProvider.showProjectHistory(result.repoRoot);
+                updateProjectViewTitle();
+                await vscode.commands.executeCommand('gitLiner.projectHistoryView.focus');
+            }
+        }
+    );
+
+    const loadMoreProjectHistoryCommand = vscode.commands.registerCommand(
+        'gitLiner.loadMoreProjectHistory',
+        async (repoRoot: string, page: number) => {
+            await projectHistoryTreeProvider.loadMoreProjectHistory(repoRoot, page);
+            updateProjectViewTitle();
+        }
+    );
+
+    const amendLatestCommitMessageCommand = vscode.commands.registerCommand(
+        'gitLiner.amendLatestCommitMessage',
+        async () => {
+            const result = await amendLatestCommitMessage(gitHistoryProvider);
+            if (result) {
+                await projectHistoryTreeProvider.showProjectHistory(result.repoRoot);
+                updateProjectViewTitle();
+            }
+        }
+    );
+
+    const softResetLatestToUpstreamCommand = vscode.commands.registerCommand(
+        'gitLiner.softResetLatestToUpstream',
+        async () => {
+            const result = await softResetLatestToUpstream(gitHistoryProvider);
+            if (result) {
+                await projectHistoryTreeProvider.showProjectHistory(result.repoRoot);
+                updateProjectViewTitle();
+            }
+        }
+    );
 
     const showCommitDiffCommand = vscode.commands.registerCommand(
         'gitLiner.showCommitDiff',
@@ -147,6 +220,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         lineTreeView,
         fileTreeView,
+        projectTreeView,
         statusBar,
         onDidChangeActiveEditor,
         showLineHistoryCommand,
@@ -157,7 +231,11 @@ export function activate(context: vscode.ExtensionContext) {
         copyCommitHashCommand,
         focusCommand,
         loadMoreLineHistoryCommand,
-        loadMoreFileHistoryCommand
+        loadMoreFileHistoryCommand,
+        showProjectHistoryCommand,
+        loadMoreProjectHistoryCommand,
+        amendLatestCommitMessageCommand,
+        softResetLatestToUpstreamCommand
     );
 }
 
