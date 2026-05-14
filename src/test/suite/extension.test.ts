@@ -239,6 +239,57 @@ suite('Git Liner Extension Tests', () => {
         }
     });
 
+    test('amendCommitMessage updates HEAD subject and preserves parent', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-amend-'));
+
+        try {
+            await execFileAsync('git', ['init'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'a.txt'), 'a\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'old1'], { cwd: repoRoot });
+            const { stdout: parentBefore } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'b.txt'), 'b\n', 'utf8');
+            await execFileAsync('git', ['add', 'b.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'old2'], { cwd: repoRoot });
+
+            const provider = new GitHistoryProvider();
+            await provider.amendCommitMessage(repoRoot, 'new commit subject');
+
+            const { stdout: subject } = await execFileAsync('git', ['log', '-1', '--pretty=%s'], { cwd: repoRoot });
+            const { stdout: parentAfter } = await execFileAsync('git', ['rev-parse', 'HEAD~1'], { cwd: repoRoot });
+            assert.strictEqual(subject.trim(), 'new commit subject');
+            assert.strictEqual(parentAfter.trim(), parentBefore.trim(), 'Parent commit must remain unchanged');
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
+    test('amendCommitMessage refuses when index has staged changes', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-amend-staged-'));
+
+        try {
+            await execFileAsync('git', ['init'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'a.txt'), 'a\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'orig'], { cwd: repoRoot });
+            await fs.promises.writeFile(path.join(repoRoot, 'a.txt'), 'changed\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+
+            const provider = new GitHistoryProvider();
+            await assert.rejects(provider.amendCommitMessage(repoRoot, 'rename'), /staged|index/i);
+            const { stdout: subject } = await execFileAsync('git', ['log', '-1', '--pretty=%s'], { cwd: repoRoot });
+            assert.strictEqual(subject.trim(), 'orig', 'Subject unchanged when refused');
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
     test('Extension is loaded', () => {
         const extension = vscode.extensions.getExtension('crazykun.git-liner');
         assert.ok(extension, 'Extension should be loaded');

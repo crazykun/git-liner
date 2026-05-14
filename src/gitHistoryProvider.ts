@@ -32,6 +32,26 @@ interface GitContext {
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
 
+    async amendCommitMessage(cwd: string, newMessage: string): Promise<void> {
+        if (!newMessage || !newMessage.trim()) {
+            throw new Error('Commit message cannot be empty');
+        }
+        const repoRoot = await this.resolveRepoRoot(cwd);
+        try {
+            await execFileAsync('git', ['diff', '--cached', '--quiet'], { cwd: repoRoot });
+        } catch {
+            throw new Error('Cannot amend: index has staged changes');
+        }
+        await execFileAsync(
+            'git',
+            ['commit', '--amend', '-m', newMessage, '--allow-empty', '--only'],
+            {
+                cwd: repoRoot,
+                env: { ...process.env, GIT_EDITOR: 'true' },
+            }
+        );
+    }
+
     async getUpstreamStatus(cwd: string): Promise<{ upstream: string | null; aheadHashes: string[] }> {
         const repoRoot = await this.resolveRepoRoot(cwd);
         let upstream: string | null = null;
