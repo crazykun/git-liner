@@ -9,3 +9,5 @@ Thumbs.db
 *.log
 coverage/
 .nyc_output/
+.claude/
+CLAUDE.md

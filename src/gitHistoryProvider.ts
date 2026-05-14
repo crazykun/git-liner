@@ -23,36 +23,39 @@ export interface PaginatedResult<T> {
     totalCount?: number;
 }
 
+interface GitContext {
+    cwd: string;
+    relativePath: string;
+}
+
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
 
-    /**
-     * 获取文件相对于其工作区根目录的路径
-     * 在多根工作区中确保使用正确的相对路径
-     */
-    private getCorrectRelativePath(filePath: string, workspaceFolder: vscode.WorkspaceFolder): string {
-        // 使用 path.relative 确保路径相对于正确的工作区根目录
-        const relativePath = path.relative(workspaceFolder.uri.fsPath, filePath);
-        
-        // 在 Windows 上，确保使用正斜杠（Git 期望的格式）
-        return relativePath.replace(/\\/g, '/');
+    private async getGitContext(
+        filePath: string,
+        workspaceFolder: vscode.WorkspaceFolder
+    ): Promise<GitContext> {
+        const fileDirectory = path.dirname(filePath);
+        const gitProbeCwd = fs.existsSync(fileDirectory) ? fileDirectory : workspaceFolder.uri.fsPath;
+        const { stdout } = await execAsync('git rev-parse --show-toplevel', { cwd: gitProbeCwd });
+        const cwd = stdout.trim();
+        const relativePath = path.relative(cwd, filePath);
+
+        return {
+            cwd,
+            relativePath: relativePath.replace(/\\/g, '/'),
+        };
     }
 
     /**
      * 检查文件是否在 Git 仓库中
      */
-    private async isFileInGitRepo(filePath: string, workspaceFolder: vscode.WorkspaceFolder): Promise<boolean> {
+    private async isFileInGitRepo(relativePath: string, cwd: string): Promise<boolean> {
         try {
-            const cwd = workspaceFolder.uri.fsPath;
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            
-            // 检查是否是 Git 仓库
             await execAsync('git rev-parse --git-dir', { cwd });
-            
-            // 检查文件是否被 Git 跟踪或曾经被跟踪
             const checkCommand = `git log --oneline --follow -- "${relativePath}" | head -1`;
             const { stdout } = await execAsync(checkCommand, { cwd });
-            
+
             return stdout.trim().length > 0;
         } catch (error) {
             return false;
@@ -74,12 +77,10 @@ export class GitHistoryProvider {
                 throw new Error('文件不在工作区中');
             }
 
-            // 在多根工作区中，确保使用正确的相对路径
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            const cwd = workspaceFolder.uri.fsPath;
+            const { cwd, relativePath } = await this.getGitContext(filePath, workspaceFolder);
 
             // 检查文件是否在 Git 仓库中
-            if (!(await this.isFileInGitRepo(filePath, workspaceFolder))) {
+            if (!(await this.isFileInGitRepo(relativePath, cwd))) {
                 throw new Error(`文件 "${relativePath}" 不在 Git 仓库中或未被跟踪`);
             }
 
@@ -175,12 +176,10 @@ export class GitHistoryProvider {
                 throw new Error('文件不在工作区中');
             }
 
-            // 在多根工作区中，确保使用正确的相对路径
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            const cwd = workspaceFolder.uri.fsPath;
+            const { cwd, relativePath } = await this.getGitContext(filePath, workspaceFolder);
 
             // 检查文件是否在 Git 仓库中
-            if (!(await this.isFileInGitRepo(filePath, workspaceFolder))) {
+            if (!(await this.isFileInGitRepo(relativePath, cwd))) {
                 throw new Error(`文件 "${relativePath}" 不在 Git 仓库中或未被跟踪`);
             }
 
@@ -267,12 +266,10 @@ export class GitHistoryProvider {
                 throw new Error('文件不在工作区中');
             }
 
-            // 在多根工作区中，确保使用正确的相对路径
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            const cwd = workspaceFolder.uri.fsPath;
+            const { cwd, relativePath } = await this.getGitContext(filePath, workspaceFolder);
 
             // 检查文件是否在 Git 仓库中
-            if (!(await this.isFileInGitRepo(filePath, workspaceFolder))) {
+            if (!(await this.isFileInGitRepo(relativePath, cwd))) {
                 throw new Error(`文件 "${relativePath}" 不在 Git 仓库中或未被跟踪`);
             }
 
@@ -355,12 +352,10 @@ export class GitHistoryProvider {
                 throw new Error('文件不在工作区中');
             }
 
-            // 在多根工作区中，确保使用正确的相对路径
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            const cwd = workspaceFolder.uri.fsPath;
+            const { cwd, relativePath } = await this.getGitContext(filePath, workspaceFolder);
 
             // 检查文件是否在 Git 仓库中
-            if (!(await this.isFileInGitRepo(filePath, workspaceFolder))) {
+            if (!(await this.isFileInGitRepo(relativePath, cwd))) {
                 throw new Error(`文件 "${relativePath}" 不在 Git 仓库中或未被跟踪`);
             }
 
@@ -434,9 +429,7 @@ export class GitHistoryProvider {
                 return;
             }
 
-            // 在多根工作区中，确保使用正确的相对路径
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            const cwd = workspaceFolder.uri.fsPath;
+            const { cwd, relativePath } = await this.getGitContext(filePath, workspaceFolder);
 
             // 获取提交信息用于标题
             const commitInfoCommand = `git show --pretty=format:"%h %s" --no-patch ${commitHash}`;
@@ -469,9 +462,7 @@ export class GitHistoryProvider {
                 return;
             }
 
-            // 在多根工作区中，确保使用正确的相对路径
-            const relativePath = this.getCorrectRelativePath(filePath, workspaceFolder);
-            const cwd = workspaceFolder.uri.fsPath;
+            const { cwd, relativePath } = await this.getGitContext(filePath, workspaceFolder);
 
             // 获取提交信息用于标题
             const commitInfoCommand = `git show --pretty=format:"%h %s" --no-patch ${commitHash}`;
