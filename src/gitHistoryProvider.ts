@@ -32,6 +32,37 @@ interface GitContext {
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
 
+    async getUpstreamStatus(cwd: string): Promise<{ upstream: string | null; aheadHashes: string[] }> {
+        const repoRoot = await this.resolveRepoRoot(cwd);
+        let upstream: string | null = null;
+        try {
+            const { stdout } = await execFileAsync(
+                'git',
+                ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'],
+                { cwd: repoRoot }
+            );
+            upstream = stdout.trim() || null;
+        } catch {
+            return { upstream: null, aheadHashes: [] };
+        }
+
+        if (!upstream) {
+            return { upstream: null, aheadHashes: [] };
+        }
+
+        const { stdout: aheadOutput } = await execFileAsync(
+            'git',
+            ['rev-list', `${upstream}..HEAD`],
+            { cwd: repoRoot }
+        );
+        const aheadHashes = aheadOutput
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
+
+        return { upstream, aheadHashes };
+    }
+
     async getProjectHistoryPaginated(
         cwd: string,
         page: number = 0,

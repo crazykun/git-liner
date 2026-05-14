@@ -126,6 +126,48 @@ suite('Git Liner Extension Tests', () => {
         }
     });
 
+    test('Upstream status reports ahead commits', async () => {
+        const repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-liner-upstream-'));
+
+        try {
+            await execFileAsync('git', ['init', '--initial-branch=main'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'user.name', 'Test User'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'commit.gpgsign', 'false'], { cwd: repoRoot });
+
+            const initialFile = path.join(repoRoot, 'a.txt');
+            await fs.promises.writeFile(initialFile, 'a\n', 'utf8');
+            await execFileAsync('git', ['add', 'a.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'initial'], { cwd: repoRoot });
+
+            const provider = new GitHistoryProvider();
+            const noUpstreamStatus = await provider.getUpstreamStatus(repoRoot);
+            assert.strictEqual(noUpstreamStatus.upstream, null, 'No upstream initially');
+            assert.deepStrictEqual(noUpstreamStatus.aheadHashes, [], 'No ahead commits without upstream');
+
+            const { stdout: initialHash } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
+            await execFileAsync('git', ['remote', 'add', 'origin', repoRoot], { cwd: repoRoot });
+            await execFileAsync('git', ['update-ref', 'refs/remotes/origin/main', initialHash.trim()], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'branch.main.remote', 'origin'], { cwd: repoRoot });
+            await execFileAsync('git', ['config', 'branch.main.merge', 'refs/heads/main'], { cwd: repoRoot });
+
+            await fs.promises.writeFile(path.join(repoRoot, 'b.txt'), 'b\n', 'utf8');
+            await execFileAsync('git', ['add', 'b.txt'], { cwd: repoRoot });
+            await execFileAsync('git', ['commit', '-m', 'second'], { cwd: repoRoot });
+            const { stdout: headHash } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
+
+            const aheadStatus = await provider.getUpstreamStatus(repoRoot);
+            assert.strictEqual(aheadStatus.upstream, 'origin/main', 'Should report upstream ref');
+            assert.deepStrictEqual(
+                aheadStatus.aheadHashes,
+                [headHash.trim()],
+                'Should list local-only commits in HEAD->upstream order'
+            );
+        } finally {
+            await fs.promises.rm(repoRoot, { recursive: true, force: true });
+        }
+    });
+
     test('Extension is loaded', () => {
         const extension = vscode.extensions.getExtension('crazykun.git-liner');
         assert.ok(extension, 'Extension should be loaded');
