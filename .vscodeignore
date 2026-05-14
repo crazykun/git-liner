@@ -6,6 +6,8 @@ tsconfig.json
 .gitignore
 *.vsix
 PUBLISH_GUIDE.md
+CLAUDE.md
+.claude/
 test-line-history.md
 INSTALL_AND_TEST.md
 READY_TO_PUBLISH.md
