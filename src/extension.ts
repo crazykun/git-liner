@@ -212,10 +212,62 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    // 监听编辑器变化以更新状态栏
+    // 监听编辑器变化以更新状态栏和自动刷新项目历史
+    let projectRefreshTimer: NodeJS.Timeout | undefined;
+    const autoRefreshProjectHistory = async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        const filePath = editor.document.fileName;
+        if (filePath.startsWith('extension-output') || editor.document.uri.scheme !== 'file') {
+            return;
+        }
+        try {
+            const fileDir = require('path').dirname(filePath);
+            const fs = require('fs');
+            const probeCwd = fs.existsSync(fileDir) ? fileDir : undefined;
+            if (!probeCwd) {
+                return;
+            }
+            const { promisify } = require('util');
+            const { exec } = require('child_process');
+            const execP = promisify(exec);
+            const { stdout } = await execP('git rev-parse --show-toplevel', { cwd: probeCwd });
+            const repoRoot = stdout.trim();
+            if (repoRoot && repoRoot !== projectHistoryTreeProvider.getCurrentRepoRoot()) {
+                await projectHistoryTreeProvider.showProjectHistory(repoRoot);
+                updateProjectViewTitle();
+            }
+        } catch {
+            // not a git repo, ignore
+        }
+    };
+
     const onDidChangeActiveEditor = vscode.window.onDidChangeActiveTextEditor(() => {
         statusBar.updateStatusBar();
+        if (projectRefreshTimer) {
+            clearTimeout(projectRefreshTimer);
+        }
+        projectRefreshTimer = setTimeout(autoRefreshProjectHistory, 300);
     });
+
+    // 文件保存后 debounce 刷新项目历史（捕获外部 commit/push）
+    const onDidSaveDocument = vscode.workspace.onDidSaveTextDocument(() => {
+        if (projectRefreshTimer) {
+            clearTimeout(projectRefreshTimer);
+        }
+        projectRefreshTimer = setTimeout(async () => {
+            const repoRoot = projectHistoryTreeProvider.getCurrentRepoRoot();
+            if (repoRoot) {
+                await projectHistoryTreeProvider.showProjectHistory(repoRoot);
+                updateProjectViewTitle();
+            }
+        }, 2000);
+    });
+
+    // 激活时自动加载当前文件所属仓库的项目历史
+    autoRefreshProjectHistory();
 
     context.subscriptions.push(
         lineTreeView,
@@ -223,6 +275,7 @@ export function activate(context: vscode.ExtensionContext) {
         projectTreeView,
         statusBar,
         onDidChangeActiveEditor,
+        onDidSaveDocument,
         showLineHistoryCommand,
         showFileHistoryCommand,
         refreshCommand,
