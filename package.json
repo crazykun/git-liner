@@ -169,9 +169,19 @@
       ],
       "view/title": [
         {
+          "command": "gitLiner.amendLatestCommitMessage",
+          "when": "view == gitLiner.projectHistoryView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitLiner.softResetLatestToUpstream",
+          "when": "view == gitLiner.projectHistoryView",
+          "group": "navigation@2"
+        },
+        {
           "command": "gitLiner.refresh",
           "when": "view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView || view == gitLiner.projectHistoryView",
-          "group": "navigation"
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
