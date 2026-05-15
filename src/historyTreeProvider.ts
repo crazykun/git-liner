@@ -541,13 +541,22 @@ export class ProjectHistoryTreeItem extends vscode.TreeItem {
     constructor(
         public readonly commit: GitCommit,
         public readonly repoRoot: string,
+        public readonly isHead: boolean,
         public readonly isUnpushedHead: boolean
     ) {
         super(commit.message, vscode.TreeItemCollapsibleState.None);
         this.tooltip = `提交: ${commit.hash}\n作者: ${commit.author}\n日期: ${commit.date}\n消息: ${commit.message}`;
         this.description = `${commit.hash} • ${commit.author}`;
-        this.contextValue = isUnpushedHead ? 'projectCommitUnpushedHead' : 'projectCommit';
-        this.iconPath = new vscode.ThemeIcon(isUnpushedHead ? 'cloud-upload' : 'git-commit');
+        if (isUnpushedHead) {
+            this.contextValue = 'projectCommitUnpushedHead';
+            this.iconPath = new vscode.ThemeIcon('cloud-upload');
+        } else if (isHead) {
+            this.contextValue = 'projectCommitHead';
+            this.iconPath = new vscode.ThemeIcon('git-commit');
+        } else {
+            this.contextValue = 'projectCommit';
+            this.iconPath = new vscode.ThemeIcon('git-commit');
+        }
         this.resourceUri = vscode.Uri.parse(`git-history-project:${commit.hash}`);
     }
 }
@@ -649,11 +658,21 @@ export class ProjectHistoryTreeProvider
             return Promise.resolve([]);
         }
 
-        const items: (ProjectHistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map((commit) => {
-            const isUnpushedHead =
-                this.upstreamHeadHash !== null && commit.fullHash === this.upstreamHeadHash;
-            return new ProjectHistoryTreeItem(commit, this.currentRepoRoot!, isUnpushedHead);
-        });
+        const items: (ProjectHistoryTreeItem | LoadMoreTreeItem)[] = this.commits.map(
+            (commit, index) => {
+                const isHead = index === 0 && this.currentPage === 0;
+                const isUnpushedHead =
+                    isHead &&
+                    this.upstreamHeadHash !== null &&
+                    commit.fullHash === this.upstreamHeadHash;
+                return new ProjectHistoryTreeItem(
+                    commit,
+                    this.currentRepoRoot!,
+                    isHead,
+                    isUnpushedHead
+                );
+            }
+        );
 
         if (this.hasMore) {
             items.push(

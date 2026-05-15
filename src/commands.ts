@@ -183,12 +183,6 @@ export async function amendLatestCommitMessage(
         return;
     }
 
-    const status = await gitHistoryProvider.getUpstreamStatus(repoRoot);
-    if (!status.upstream || status.aheadHashes.length === 0) {
-        ui.showWarningMessage(I18n.t('error.notUnpushedHead'));
-        return;
-    }
-
     let currentSubject = '';
     try {
         const { stdout } = await execAsync('git log -1 --pretty=%B', { cwd: repoRoot });

@@ -187,12 +187,12 @@
         },
         {
           "command": "gitLiner.copyCommitHash",
-          "when": "(view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView || view == gitLiner.projectHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit || viewItem == projectCommit || viewItem == projectCommitUnpushedHead)",
+          "when": "(view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView || view == gitLiner.projectHistoryView) && (viewItem == commit || viewItem == fileCommit || viewItem == lineCommit || viewItem == projectCommit || viewItem == projectCommitHead || viewItem == projectCommitUnpushedHead)",
           "group": "inline"
         },
         {
           "command": "gitLiner.amendLatestCommitMessage",
-          "when": "view == gitLiner.projectHistoryView && viewItem == projectCommitUnpushedHead",
+          "when": "view == gitLiner.projectHistoryView && (viewItem == projectCommitHead || viewItem == projectCommitUnpushedHead)",
           "group": "1_modify@1"
         },
         {

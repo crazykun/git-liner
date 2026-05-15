@@ -187,7 +187,7 @@ suite('Git Liner Extension Tests', () => {
             await treeProvider.showProjectHistory(repoRoot);
             const noAheadChildren = await Promise.resolve(treeProvider.getChildren());
             assert.strictEqual(noAheadChildren.length, 1, 'Should show single commit');
-            assert.strictEqual(noAheadChildren[0].contextValue, 'projectCommit', 'No ahead => projectCommit');
+            assert.strictEqual(noAheadChildren[0].contextValue, 'projectCommitHead', 'HEAD without upstream ahead => projectCommitHead');
 
             const { stdout: initialHash } = await execFileAsync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot });
             await execFileAsync('git', ['remote', 'add', 'origin', repoRoot], { cwd: repoRoot });
