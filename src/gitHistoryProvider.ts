@@ -32,6 +32,11 @@ interface GitContext {
 export class GitHistoryProvider {
     private tempFiles: string[] = [];
 
+    async softResetLastCommit(cwd: string): Promise<void> {
+        const repoRoot = await this.resolveRepoRoot(cwd);
+        await execFileAsync('git', ['reset', '--soft', 'HEAD~1'], { cwd: repoRoot });
+    }
+
     async softResetToUpstream(cwd: string): Promise<void> {
         const repoRoot = await this.resolveRepoRoot(cwd);
         const status = await this.getUpstreamStatus(repoRoot);

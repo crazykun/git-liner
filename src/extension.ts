@@ -5,6 +5,7 @@ import {
     showFileHistory,
     showProjectHistory,
     amendLatestCommitMessage,
+    softResetLastCommit,
     softResetLatestToUpstream,
 } from './commands';
 import {
@@ -152,6 +153,17 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    const softResetLastCommitCommand = vscode.commands.registerCommand(
+        'gitLiner.softResetLastCommit',
+        async () => {
+            const result = await softResetLastCommit(gitHistoryProvider);
+            if (result) {
+                await projectHistoryTreeProvider.showProjectHistory(result.repoRoot);
+                updateProjectViewTitle();
+            }
+        }
+    );
+
     const softResetLatestToUpstreamCommand = vscode.commands.registerCommand(
         'gitLiner.softResetLatestToUpstream',
         async () => {
@@ -288,6 +300,7 @@ export function activate(context: vscode.ExtensionContext) {
         showProjectHistoryCommand,
         loadMoreProjectHistoryCommand,
         amendLatestCommitMessageCommand,
+        softResetLastCommitCommand,
         softResetLatestToUpstreamCommand
     );
 }

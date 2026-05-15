@@ -37,6 +37,9 @@ export class I18n {
                 'softReset.confirm': '将本地未推送的 {1} 个提交回退到 {0}，已修改的内容会保留在暂存区，是否继续？',
                 'softReset.confirmAction': '确认回退',
                 'softReset.success': '已回退到 {0}',
+                'softResetLast.confirm': '将最后一次提交回退，已修改的内容会保留在暂存区，是否继续？',
+                'softResetLast.confirmAction': '确认回退',
+                'softResetLast.success': '已回退最后一次提交',
                 'error.noUpstream': '当前分支没有 upstream',
                 'error.notUnpushedHead': '最新提交不再是未推送的 HEAD，请刷新视图',
             };
@@ -63,6 +66,9 @@ export class I18n {
                 'softReset.confirm': 'Soft reset {1} unpushed commit(s) to {0}? Working changes will stay staged.',
                 'softReset.confirmAction': 'Reset',
                 'softReset.success': 'Reset to {0}',
+                'softResetLast.confirm': 'Undo last commit? Changes will stay staged.',
+                'softResetLast.confirmAction': 'Undo',
+                'softResetLast.success': 'Last commit undone',
                 'error.noUpstream': 'Current branch has no upstream',
                 'error.notUnpushedHead': 'Latest commit is no longer the unpushed HEAD, please refresh',
             };

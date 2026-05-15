@@ -149,9 +149,14 @@
         "icon": "$(edit)"
       },
       {
+        "command": "gitLiner.softResetLastCommit",
+        "title": "%command.softResetLastCommit%",
+        "icon": "$(discard)"
+      },
+      {
         "command": "gitLiner.softResetLatestToUpstream",
         "title": "%command.softResetLatestToUpstream%",
-        "icon": "$(discard)"
+        "icon": "$(cloud-download)"
       }
     ],
     "menus": {
@@ -174,14 +179,19 @@
           "group": "navigation@1"
         },
         {
-          "command": "gitLiner.softResetLatestToUpstream",
+          "command": "gitLiner.softResetLastCommit",
           "when": "view == gitLiner.projectHistoryView",
           "group": "navigation@2"
         },
         {
+          "command": "gitLiner.softResetLatestToUpstream",
+          "when": "view == gitLiner.projectHistoryView",
+          "group": "navigation@3"
+        },
+        {
           "command": "gitLiner.refresh",
           "when": "view == gitLiner.lineHistoryView || view == gitLiner.fileHistoryView || view == gitLiner.projectHistoryView",
-          "group": "navigation@3"
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -206,9 +216,14 @@
           "group": "1_modify@1"
         },
         {
+          "command": "gitLiner.softResetLastCommit",
+          "when": "view == gitLiner.projectHistoryView && (viewItem == projectCommitHead || viewItem == projectCommitUnpushedHead)",
+          "group": "1_modify@2"
+        },
+        {
           "command": "gitLiner.softResetLatestToUpstream",
           "when": "view == gitLiner.projectHistoryView && viewItem == projectCommitUnpushedHead",
-          "group": "1_modify@2"
+          "group": "1_modify@3"
         }
       ]
     },

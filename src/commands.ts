@@ -225,6 +225,46 @@ export async function amendLatestCommitMessage(
     );
 }
 
+export async function softResetLastCommit(
+    gitHistoryProvider: GitHistoryProvider,
+    ui: ConfirmationUi = defaultUi
+): Promise<{ repoRoot: string } | undefined> {
+    const repoRoot = await resolveActiveRepoRoot();
+    if (!repoRoot) {
+        ui.showWarningMessage(I18n.t('noGitRepository'));
+        return;
+    }
+
+    const confirmLabel = I18n.t('softResetLast.confirmAction');
+    const confirmation = await ui.showWarningMessage(
+        I18n.t('softResetLast.confirm'),
+        { modal: true },
+        confirmLabel
+    );
+    if (confirmation !== confirmLabel) {
+        return;
+    }
+
+    return vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: I18n.t('softResetLast.confirmAction'),
+            cancellable: false,
+        },
+        async () => {
+            try {
+                await gitHistoryProvider.softResetLastCommit(repoRoot);
+                ui.showInformationMessage(I18n.t('softResetLast.success'));
+                return { repoRoot };
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                ui.showErrorMessage(message);
+                return undefined;
+            }
+        }
+    );
+}
+
 export async function softResetLatestToUpstream(
     gitHistoryProvider: GitHistoryProvider,
     ui: ConfirmationUi = defaultUi
